@@ -4,18 +4,20 @@
 
 /* Memory */
 
-void ULIB_memcpy(void *dest, const void *src, size_t n);
-
 typedef struct {
-  // private
-  int allocated_memory[6];
-} ULIB_fifo_t;
+  void *buffer;
+  size_t elementSize;
+  size_t capacity;
+  size_t head;
+  size_t tail;
+  size_t count;
+} ul_fifo_t;
 
-int ULIB_fifo_init(ULIB_fifo_t *self, void *buffer, size_t capacity,
-                   size_t elementSize);
-int ULIB_fifo_put(ULIB_fifo_t *self, void *element);
-int ULIB_fifo_get(ULIB_fifo_t *self, void *element);
-size_t ULIB_fifo_count(ULIB_fifo_t *self);
-size_t ULIB_fifo_capacity(ULIB_fifo_t *self);
+int ul_fifo_init(ul_fifo_t *self, void *buffer, size_t capacity,
+                 size_t elementSize);
+int ul_fifo_put(ul_fifo_t *self, void *element);
+int ul_fifo_get(ul_fifo_t *self, void *element);
+size_t ul_fifo_count(ul_fifo_t *self);
+size_t ul_fifo_capacity(ul_fifo_t *self);
 
 #endif
