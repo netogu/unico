@@ -10,6 +10,7 @@ int ul_fifo_init(ul_fifo_t *self, void *buffer, size_t capacity,
 
   self->buffer = buffer;
   self->capacity = capacity;
+  self->elementSize = elementSize;
   self->head = 0;
   self->tail = 0;
   self->count = 0;
@@ -31,7 +32,7 @@ int ul_fifo_get(ul_fifo_t *self, void *element) {
   return 0;
 }
 
-int ul_fifo_put(ul_fifo_t *self, void *element) {
+int ul_fifo_put(ul_fifo_t *self, const void *element) {
 
   if (!self || !self->buffer || self->count == self->capacity) {
     return -1;

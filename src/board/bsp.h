@@ -6,7 +6,6 @@ File   : bsp.h
 #pragma once
 
 #include "hal.h"
-#include "shell.h"
 
 //------------------------------------------------------+
 // Board Variant
@@ -75,12 +74,12 @@ typedef struct board_s {
     adc_input_t ib_fb;
   } ai;
 
-  struct board_hw_t {
+  struct board_hw_s {
     pwm_3ph_t mcpwm;
     encoder_t encoder;
   } hw;
 
-  struct board_com_t {
+  struct board_com_s {
     uart_t console;
   } com;
 

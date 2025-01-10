@@ -9,11 +9,9 @@
 '---------------------'
 */
 
-#include "rtos.h"
-#include "shell.h"
 #include "bsp.h"
+#include "rtos.h"
 #include "tasklist.h"
-
 
 int main(void) {
 
