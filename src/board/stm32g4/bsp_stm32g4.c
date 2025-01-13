@@ -155,18 +155,17 @@ static void board_com_setup(void) {
   brd.com.console =
 
       (uart_t){
-          .instance = LPUART1,
-          .config =
-              (struct uart_config_s){
-                  .baudrate = 115200,
-                  .mode = UART_MODE_RX_TX,
-                  .word_length = UART_DATA_BITS_8,
-                  .stop_bits = UART_STOP_BITS_1,
-                  .parity = UART_PARITY_NONE,
-                  .flow_control = UART_FLOW_CONTROL_NONE,
-              },
-
+          .uart_base = LPUART1,
       };
 
-  uart_init_dma(&brd.com.console);
+  uart_config_t config = (struct uart_config_s){
+      .baudrate = 115200,
+      .mode = UART_MODE_RX_TX,
+      .word_length = UART_DATA_BITS_8,
+      .stop_bits = UART_STOP_BITS_1,
+      .parity = UART_PARITY_NONE,
+      .flow_control = UART_FLOW_CONTROL_NONE,
+  };
+
+  uart_init_dma(&brd.com.console, config);
 }
