@@ -207,9 +207,6 @@ void DMA1_Channel3_IRQHandler(void) {
     DMA1->IFCR |= DMA_IFCR_CTCIF3;
 
     uart_fifo_update_on_dma(&brd->com.console);
-
-    // Transfer what may be left in the buffer
-    // uart_dma_transfer(&brd->com.console);
   }
 
   if (DMA1->ISR & DMA_ISR_HTIF3) {

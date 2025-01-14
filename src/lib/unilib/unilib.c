@@ -79,7 +79,7 @@ int ul_fifo_enqueue_n(ul_fifo_t *self, size_t n, const void *element) {
     return 0; // error
   }
   for (size_t i = 0; i < n; i++) {
-    if (ul_fifo_enqueue(self, element + i * self->element_size) == 0) {
+    if (ul_fifo_enqueue(self, element + (i * self->element_size)) == 0) {
       elements_processed++;
     }
   }
