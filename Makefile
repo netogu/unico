@@ -1,9 +1,9 @@
 #------------------------------------------------+
-#  Target: ecos
+#  Target: unico
 #  MCU: STM32G474xx
 #  Board:
 #------------------------------------------------+
-TARGET = ecos
+TARGET = unico
 DEVICE = STM32G474xx
 
 #------------------------------------------------+
@@ -27,6 +27,7 @@ TINYUSB = src/external/tinyusb/src
 MICROSHELL = src/external/microshell/src
 TINYPRINTF = src/external/tiny_printf
 FREERTOS = src/external/freertos
+ARM_PATH = /usr/local/arm-gnu-toolchain
 
 #------------------------------------------------+
 # Sources
@@ -41,7 +42,7 @@ C_SOURCES += $(wildcard src/tasks/*.c)
 C_SOURCES += $(wildcard src/drivers/*.c) 
 C_SOURCES += $(wildcard src/drivers/stm32g4/*.c) 
 C_SOURCES += $(wildcard src/drivers/power/*.c) 
-C_SOURCES += $(wildcard src/lib/*.c)
+C_SOURCES += $(wildcard src/lib/unilib/*.c)
 C_SOURCES += $(wildcard $(TINYPRINTF)/*.c)
 C_SOURCES += $(wildcard $(TINYUSB)/tusb.c)
 C_SOURCES += $(wildcard $(TINYUSB)/common/*.c)
@@ -76,6 +77,7 @@ C_INCLUDES =  \
 -Isrc/hal \
 -Isrc/rtos \
 -Isrc/tasks \
+-Isrc/lib/unilib \
 -Isrc/external/CMSIS/Device/ST/STM32G4xx/Include \
 -Isrc/external/CMSIS/Include \
 -Isrc/external/CMSIS-DSP/Include \
@@ -85,6 +87,7 @@ C_INCLUDES =  \
 -I$(MICROSHELL)/inc \
 -I$(FREERTOS)/include \
 -I$(FREERTOS)/portable/GCC/ARM_CM4F \
+-I$(ARM_PATH)/arm-none-eabi/include \
 
 #------------------------------------------------+
 # Linker 
@@ -99,7 +102,7 @@ LDFLAGS += --specs=nano.specs --specs=nosys.specs -u _print_float -u _scanf_floa
 #------------------------------------------------+
 # Toolchain
 #------------------------------------------------+
-PREFIX = arm-none-eabi-
+PREFIX = $(ARM_PATH)/bin/arm-none-eabi-
 # PREFIX = ~/Dev/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.
