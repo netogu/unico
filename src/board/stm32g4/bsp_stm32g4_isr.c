@@ -206,7 +206,13 @@ void DMA1_Channel3_IRQHandler(void) {
     // Service the TX DMA buffer
     DMA1->IFCR |= DMA_IFCR_CTCIF3;
 
-    uart_fifo_update_on_dma(&brd->com.console);
+    uart_t *uart = &brd->com.console;
+
+    uart_fifo_update_on_dma(uart);
+
+    if (uart->tx_fifo.count > 0) {
+      uart_dma_transfer(uart);
+    }
   }
 
   if (DMA1->ISR & DMA_ISR_HTIF3) {

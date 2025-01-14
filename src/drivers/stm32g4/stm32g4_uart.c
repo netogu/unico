@@ -79,7 +79,7 @@ static void usart_enable_dma(uart_t *self) {
   UART_TX_DMA->CNDTR = 0;
   UART_TX_DMA->CCR = 0;
   // Enable memory increment and set direction to memory-to-peripheral
-  UART_TX_DMA->CCR |= DMA_CCR_MINC | DMA_CCR_DIR | DMA_CCR_TCIE | DMA_CCR_HTIE;
+  UART_TX_DMA->CCR |= DMA_CCR_MINC | DMA_CCR_DIR | DMA_CCR_TCIE;
 
 // Route DMA Requests
 #if 0
@@ -89,10 +89,9 @@ static void usart_enable_dma(uart_t *self) {
   DMAMUX1_Channel1->CCR = LPUART1_DMA_RX_REQ_NUM;
   DMAMUX1_Channel2->CCR = LPUART1_DMA_TX_REQ_NUM;
 
-  // Enable DMA1 Channel 2
+  // Enable DMA1 Channels
   UART_RX_DMA->CCR |= DMA_CCR_EN;
-  // Enable DMA1 Channel 3
-  // UART_TX_DMA->CCR |= DMA_CCR_EN;
+  UART_TX_DMA->CCR |= DMA_CCR_EN;
 
   // Enable USART DMA
   uart_base->CR3 |= (USART_CR3_DMAT | USART_CR3_DMAR);
@@ -176,15 +175,16 @@ int uart_fifo_update_on_dma(uart_t *self) {
 void uart_dma_receive(uart_t *self) {
   ul_fifo_t *fifo = &self->rx_fifo;
   size_t dma_tail = fifo->capacity - UART_RX_DMA->CNDTR;
-  size_t new_count = (dma_tail >= fifo->head)
-                         ? (dma_tail - fifo->head)
-                         : (fifo->capacity - fifo->head + dma_tail);
+  size_t new_count = (dma_tail >= fifo->tail)
+                         ? (dma_tail - fifo->tail)
+                         : (fifo->capacity - fifo->tail + dma_tail);
   if (new_count > fifo->capacity) {
     new_count = fifo->capacity;
+    fifo->head = (fifo->tail + 1) % fifo->capacity;
+  } else {
+    fifo->tail = dma_tail;
+    fifo->count = new_count;
   }
-
-  fifo->tail = dma_tail;
-  fifo->count = new_count;
 }
 
 void uart_init_dma(uart_t *self, uart_config_t config) {
@@ -292,13 +292,10 @@ void uart_init(uart_t *self, uart_config_t config) {
 size_t uart_write(uart_t *self, uint8_t *data, size_t size) {
   size_t bytes_written = 0;
 
-  uint32_t primask = __get_PRIMASK();
-  __disable_irq();
   for (size_t i = 0; i < size; i++) {
     ul_fifo_enqueue(&self->tx_fifo, &data[i]);
     bytes_written++;
   }
-  __set_PRIMASK(primask);
   // Enable TXE interrupt
   // uart_base->CR1 |= USART_CR1_TXEIE;
 
@@ -310,13 +307,14 @@ size_t uart_write(uart_t *self, uint8_t *data, size_t size) {
 size_t uart_read(uart_t *self, uint8_t *data, size_t size) {
   size_t bytes_read = 0;
 
-  uint32_t primask = __get_PRIMASK();
-  __disable_irq();
-  while (bytes_read < size && self->rx_fifo.count > 0) {
-    ul_fifo_dequeue(&self->rx_fifo, &data);
-    bytes_read++;
+  while (size--) {
+    if (ul_fifo_dequeue(&self->rx_fifo, &data) == 0) {
+      data++;
+      bytes_read++;
+    } else {
+      break; // FIFO empty
+    }
   }
-  __set_PRIMASK(primask);
 
   // Return the number of bytes successfully read from the buffer
   return bytes_read;
