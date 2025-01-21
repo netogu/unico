@@ -3,13 +3,13 @@
 #include "hal.h"
 #include "rtos.h"
 #include "taskmsg.h"
-#include <inttypes.h> // for PRIu64
+#include "tusb.h"
 
 #define NOCHAR '\0'
 #define SHELL_HOSTNAME "board"
 
-#define CLI_UART
-// #define CLI_USB
+// #define CLI_UART
+#define CLI_USB
 
 extern void shell_cmd_top_exec_cb(struct ush_object *self,
                                   struct ush_file_descriptor const *file,
@@ -95,10 +95,10 @@ static void drv_en_callback(struct ush_object *self,
   // arguments validation
   if (strcmp(argv[1], "1") == 0) {
     // turn gate driver on
-    gpio_pin_set(&brd->dio.drive_enable);
+    gpio_pin_set(&brd->dio.motor_en);
   } else if (strcmp(argv[1], "0") == 0) {
     // turn gate driver off
-    gpio_pin_clear(&brd->dio.drive_enable);
+    gpio_pin_clear(&brd->dio.motor_en);
   } else {
     // return predefined error message
     ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
@@ -126,10 +126,10 @@ static void mpwr_en_callback(struct ush_object *self,
   // arguments validation
   if (strcmp(argv[1], "1") == 0) {
     // turn gate driver on
-    gpio_pin_set(&brd->dio.test_pin0);
+    gpio_pin_set(&brd->dio.mpwr_en);
   } else if (strcmp(argv[1], "0") == 0) {
     // turn VM efuse driver off
-    gpio_pin_clear(&brd->dio.test_pin0);
+    gpio_pin_clear(&brd->dio.mpwr_en);
   } else {
     // return predefined error message
     ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);

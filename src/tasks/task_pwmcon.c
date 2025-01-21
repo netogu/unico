@@ -65,7 +65,7 @@ static void task_pwmcon_timer_callback(void);
 
 static TaskHandle_t task_pwm_control_handle;
 static StaticTask_t task_pwm_control_tcb;
-static StackType_t task_pwm_control_stack[TASK_STACK_SIZE_LED];
+static StackType_t task_pwm_control_stack[TASK_STACK_SIZE_PWM_CONTROL];
 static void task_pwm_control(void *parameters);
 
 TaskHandle_t task_pwm_control_init(void) {
