@@ -28,16 +28,16 @@ void board_adc_setup(void) {
   brd->ai = (struct board_ai_s){
 
       //--- Adc1 ---
-      .adc1_1 =
-          (gpio_t){
-              .port = GPIO_PORT_A,
-              .pin = GPIO_PIN_0,
-              .mode = GPIO_MODE_ANALOG,
-              .type = GPIO_TYPE_PUSH_PULL,
-              .pull = GPIO_PULL_NONE,
-              .speed = GPIO_SPEED_LOW,
-              .af = GPIO_AF0,
-          },
+      // .adc1_1 =
+      //     (gpio_t){
+      //         .port = GPIO_PORT_A,
+      //         .pin = GPIO_PIN_0,
+      //         .mode = GPIO_MODE_ANALOG,
+      //         .type = GPIO_TYPE_PUSH_PULL,
+      //         .pull = GPIO_PULL_NONE,
+      //         .speed = GPIO_SPEED_LOW,
+      //         .af = GPIO_AF0,
+      //     },
 
       .vm_fb =
           (adc_input_t){
@@ -49,16 +49,16 @@ void board_adc_setup(void) {
           },
 
       //--- Adc2 ---
-      .adc2_2 =
-          (gpio_t){
-              .port = GPIO_PORT_A,
-              .pin = GPIO_PIN_1,
-              .mode = GPIO_MODE_ANALOG,
-              .type = GPIO_TYPE_PUSH_PULL,
-              .pull = GPIO_PULL_NONE,
-              .speed = GPIO_SPEED_LOW,
-              .af = GPIO_AF0,
-          },
+      // .adc2_2 =
+      //     (gpio_t){
+      //         .port = GPIO_PORT_A,
+      //         .pin = GPIO_PIN_1,
+      //         .mode = GPIO_MODE_ANALOG,
+      //         .type = GPIO_TYPE_PUSH_PULL,
+      //         .pull = GPIO_PULL_NONE,
+      //         .speed = GPIO_SPEED_LOW,
+      //         .af = GPIO_AF0,
+      //     },
 
       .temp_a =
           (adc_input_t){
@@ -70,16 +70,16 @@ void board_adc_setup(void) {
           },
 
       //--- Adc3 ---
-      .adc3_12 =
-          (gpio_t){
-              .port = GPIO_PORT_B,
-              .pin = GPIO_PIN_0,
-              .mode = GPIO_MODE_ANALOG,
-              .type = GPIO_TYPE_PUSH_PULL,
-              .pull = GPIO_PULL_NONE,
-              .speed = GPIO_SPEED_LOW,
-              .af = GPIO_AF0,
-          },
+      // .adc3_12 =
+      //     (gpio_t){
+      //         .port = GPIO_PORT_B,
+      //         .pin = GPIO_PIN_0,
+      //         .mode = GPIO_MODE_ANALOG,
+      //         .type = GPIO_TYPE_PUSH_PULL,
+      //         .pull = GPIO_PULL_NONE,
+      //         .speed = GPIO_SPEED_LOW,
+      //         .af = GPIO_AF0,
+      //     },
       .ia_fb =
           (adc_input_t){
               .name = "ia_fb",
@@ -90,16 +90,16 @@ void board_adc_setup(void) {
           },
 
       //--- Adc4 ---
-      .adc4_3 =
-          (gpio_t){
-              .port = GPIO_PORT_B,
-              .pin = GPIO_PIN_12,
-              .mode = GPIO_MODE_ANALOG,
-              .type = GPIO_TYPE_PUSH_PULL,
-              .pull = GPIO_PULL_NONE,
-              .speed = GPIO_SPEED_LOW,
-              .af = GPIO_AF0,
-          },
+      // .adc4_3 =
+      //     (gpio_t){
+      //         .port = GPIO_PORT_B,
+      //         .pin = GPIO_PIN_12,
+      //         .mode = GPIO_MODE_ANALOG,
+      //         .type = GPIO_TYPE_PUSH_PULL,
+      //         .pull = GPIO_PULL_NONE,
+      //         .speed = GPIO_SPEED_LOW,
+      //         .af = GPIO_AF0,
+      //     },
       .ib_fb =
           (adc_input_t){
               .name = "ib_fb",
@@ -110,10 +110,10 @@ void board_adc_setup(void) {
           },
   };
 
-  gpio_pin_init(&brd->ai.adc1_1);
-  gpio_pin_init(&brd->ai.adc2_2);
-  gpio_pin_init(&brd->ai.adc3_12);
-  gpio_pin_init(&brd->ai.adc4_3);
+  // gpio_pin_init(&brd->ai.adc1_1);
+  // gpio_pin_init(&brd->ai.adc2_2);
+  // gpio_pin_init(&brd->ai.adc3_12);
+  // gpio_pin_init(&brd->ai.adc4_3);
 
   adc_register_input(&adc1, &brd->ai.vm_fb, 'r', ADC_SAMPLE_TIME_247_5_CYCLES);
   adc_register_input(&adc2, &brd->ai.temp_a, 'r', ADC_SAMPLE_TIME_247_5_CYCLES);

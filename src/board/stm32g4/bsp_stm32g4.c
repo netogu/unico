@@ -3,11 +3,7 @@
 
 #include "bsp.h"
 #include "log.h"
-#include "rtos.h"
 #include "shell.h"
-
-#include "tiny_printf.h"
-#include "tusb.h"
 
 extern uint32_t g_isr_count_uart_tx;
 extern uint32_t g_isr_count_uart_rx;
@@ -24,9 +20,10 @@ void HardFault_Handler(void) { __asm("BKPT #0\n"); }
 //------------------------------------------------------+
 // Clock Selection
 //------------------------------------------------------+
-#ifdef STM32G4_NUKLEO
+#ifdef BSP_STM32G4_NUKLEO
 #define CLOCK_SETUP_HSI_16MHZ_170MHZ
 #else
+// #define CLOCK_SETUP_HSI_16MHZ_170MHZ
 #define CLOCK_SETUP_HSE_24MHZ_170MHZ
 #endif
 
@@ -55,6 +52,7 @@ int board_init(void) {
   board_clock_setup();
   board_dio_setup();
   board_com_setup();
+  board_usb_setup();
 
   LOG_CLEAR();
   printf(timestamp());
@@ -65,7 +63,7 @@ int board_init(void) {
 
 void board_hw_setup(void) {
 
-  board_usb_setup();
+  // board_usb_setup();
   board_pwm_setup();
   board_adc_setup();
   board_encoder_setup();
@@ -168,5 +166,5 @@ static void board_com_setup(void) {
 
       };
 
-  uart_init_dma(&brd.com.console);
+  // uart_init_dma(&brd.com.console);
 }

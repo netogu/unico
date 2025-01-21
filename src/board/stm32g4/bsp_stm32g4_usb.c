@@ -102,12 +102,15 @@ static inline size_t board_usb_get_serial(uint16_t desc_str1[],
 }
 
 #define _PID_MAP(itf, n) ((CFG_TUD_##itf) << (n))
+/*
 #define USB_PID                                                                \
   (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) |           \
    _PID_MAP(MIDI, 3) | _PID_MAP(VENDOR, 4))
+*/
 
 #define USB_VID 0xCafe
 #define USB_BCD 0x0200
+#define USB_PID 0x4001
 
 //--------------------------------------------------------------------+
 // Device Descriptors

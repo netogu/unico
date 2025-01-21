@@ -5,21 +5,23 @@ File   : bsp.h
 
 #pragma once
 
-#include "hal.h"
-#include "shell.h"
+#include "encoder.h"
+#include "stm32g4.h"
 
 //------------------------------------------------------+
 // Board Variant
 //------------------------------------------------------+
-#define STM32G4_NUKLEO
-// #define STM32G4_F50
+#define BSP_G4_NUKLEO
+// #define BSP_MLB_revA
+// #define BSP_MLB_G4
+// #define BSP_F50_G4
 
 //------------------------------------------------------+
 // Shell Interface Selection
 //------------------------------------------------------+
-// #define SHELL_INTERFACE_USB
+#define SHELL_INTERFACE_USB
 // #define SHELL_INTERFACE_USART3
-#define SHELL_INTERFACE_LPUART1
+// #define SHELL_INTERFACE_LPUART1
 
 //------------------------------------------------------
 // GPIOs
@@ -27,52 +29,88 @@ File   : bsp.h
 typedef struct board_s {
 
   struct board_dio_s {
+    // Indicators
     gpio_t led_red;
     gpio_t led_green;
     gpio_t led_blue;
-    gpio_t drive_enable;
-    gpio_t test_pin0;
-    gpio_t pwm_dac_ocp_th;
-    gpio_t flt_ocp_n;
-    gpio_t spi3_mosi;
-    gpio_t spi3_miso;
-    gpio_t spi3_clk;
-    gpio_t spi3_menc1_cs;
-    gpio_t spi4_mosi;
-    gpio_t spi4_miso;
-    gpio_t spi4_clk;
-    gpio_t spi4_gd_cs;
-    gpio_t spi4_ltc_cs;
+
+    // Motor Drive Control
+    gpio_t mpwr_en;
+    gpio_t flt_mwr_n;
+    gpio_t flt_drv_n;
+    gpio_t motor_en;
+    gpio_t sto_a_n;
+    gpio_t sto_b_n;
+    gpio_t mc_status;
+    gpio_t mc_error_n;
+
+    // Motor PWMs
     gpio_t pwm_ah;
     gpio_t pwm_al;
     gpio_t pwm_bh;
     gpio_t pwm_bl;
     gpio_t pwm_ch;
     gpio_t pwm_cl;
-    gpio_t adc_pa0;
-    gpio_t adc_pc0;
-    gpio_t adc_pc1;
-    gpio_t lpuart_tx;
-    gpio_t lpuart_rx;
-    gpio_t usart3_tx;
-    gpio_t usart3_rx;
+
+    // Misc
+    gpio_t tc_pwr_en;
     gpio_t enc_a_pin;
     gpio_t enc_b_pin;
+    gpio_t test_pin0;
+
+    // SPI1
+    gpio_t spi1_mosi;
+    gpio_t spi1_miso;
+    gpio_t spi1_clk;
+    gpio_t spi1_cs_n;
+
+    // SPI2
+    gpio_t spi2_mosi;
+    gpio_t spi2_miso;
+    gpio_t spi2_clk;
+    gpio_t spi2_cs_n;
+
+    // SPI4
+    gpio_t spi4_mosi;
+    gpio_t spi4_miso;
+    gpio_t spi4_clk;
+    gpio_t spi4_men_cs_n;
+    gpio_t spi4_oen_cs_n;
+
+// UART
+#ifdef BSP_STM32G4_NUKLEO
+    gpio_t lpuart_tx;
+    gpio_t lpuart_rx;
+#endif
+    gpio_t usart1_tx;
+    gpio_t usart1_rx;
+    gpio_t usart3_tx;
+    gpio_t usart3_rx;
+
+    // USB
+    gpio_t usb_dp;
+    gpio_t usb_dm;
+
   } dio;
 
   struct board_ai_s {
-    gpio_t adc1_1;
-    adc_input_t vm_fb;
-    gpio_t adc2_2;
-    adc_input_t va_fb;
-    gpio_t adc3_12;
-    adc_input_t vb_fb;
-    gpio_t adc4_3;
-    adc_input_t vc_fb;
+
+    adc_input_t vbatt_mon;
+    adc_input_t vgd_mon;
     adc_input_t temp_a;
     adc_input_t temp_b;
+    adc_input_t temp_c;
+    adc_input_t temp_m;
+
+    adc_input_t vm_fb;
+    adc_input_t va_fb;
+    adc_input_t vb_fb;
+    adc_input_t vc_fb;
+    adc_input_t im_fb;
     adc_input_t ia_fb;
     adc_input_t ib_fb;
+    adc_input_t ic_fb;
+
   } ai;
 
   struct board_hw_t {
@@ -85,11 +123,6 @@ typedef struct board_s {
   } com;
 
 } board_t;
-
-// extern struct gpio io;
-// extern struct hrtim_pwm pwma, pwmb, pwmc;
-// extern struct spi spi3, spi4;
-// extern struct drv835x gate_driver;
 
 board_t *board_get_handle(void);
 int board_init(void);
