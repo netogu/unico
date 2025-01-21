@@ -1,31 +1,31 @@
 
 //--------------------------------------------------------------------+
-// LED Task
+// HMI Task
 //--------------------------------------------------------------------+
 
 #include "bsp.h"
 #include "tasklist.h"
 
-static TaskHandle_t led_task_handle;
-static StaticTask_t led_task_tcb;
-static StackType_t led_task_stack[TASK_STACK_SIZE_LED];
-static void led_task(void *parameters);
+static TaskHandle_t task_hmi_handle;
+static StaticTask_t task_hmi_tcb;
+static StackType_t task_hmi_stack[TASK_STACK_SIZE_HMI];
+static void task_hmi_app(void *parameters);
 
-TaskHandle_t led_task_init(void) {
+TaskHandle_t task_hmi_init(void) {
   // Create the task
 
-  led_task_handle =
-      xTaskCreateStatic(led_task, xstr(TASK_NAME_LED), TASK_STACK_SIZE_LED,
-                        NULL, TASK_PRIORITY_CLI, led_task_stack, &led_task_tcb);
+  task_hmi_handle =
+      xTaskCreateStatic(task_hmi_app, xstr(TASK_NAME_HMI), TASK_STACK_SIZE_HMI,
+                        NULL, TASK_PRIORITY_HMI, task_hmi_stack, &task_hmi_tcb);
 
-  if (led_task_handle != NULL) {
-    return led_task_handle;
+  if (task_hmi_handle != NULL) {
+    return task_hmi_handle;
   } else {
     return NULL;
   }
 }
 
-static void led_task(void *parameters) {
+static void task_hmi_app(void *parameters) {
 
   board_t *brd = board_get_handle();
 
@@ -39,6 +39,6 @@ static void led_task(void *parameters) {
     gpio_pin_set(&brd->dio.led_blue);
     gpio_pin_set(&brd->dio.led_red);
 
-    vTaskDelay(TASK_DELAY_LED);
+    vTaskDelay(TASK_DELAY_HMI);
   }
 }

@@ -1,5 +1,6 @@
 
 #include "bsp.h"
+#include "tusb.h"
 
 //------------------------------------------------------
 // Syscalls
@@ -8,13 +9,14 @@
 // printf redirect to UART
 void _putchar(char character) {
 
-  board_t *brd = board_get_handle();
-
 #ifdef SHELL_INTERFACE_USB
-  tud_cdc_write_char(character);
+  (void)character;
+  // tud_cdc_write_char(character);
 #elif defined(SHELL_INTERFACE_USART3)
+  board_t *brd = board_get_handle();
   uart_write(&brd.usart3, (uint8_t *)&character, 1);
 #else
+  board_t *brd = board_get_handle();
   uart_write(&brd->com.console, (uint8_t *)&character, 1);
 #endif
 }
@@ -47,10 +49,11 @@ int _read(int file, char *ptr, int len) {
 
 int _write(int file, char *ptr, int len) {
   (void)file;
+  (void)ptr;
 
-  board_t *brd = board_get_handle();
-
-  uart_write(&brd->com.console, (uint8_t *)ptr, len);
+  // board_t *brd = board_get_handle();
+  //
+  // uart_write(&brd->com.console, (uint8_t *)ptr, len);
 
   return len;
 }
