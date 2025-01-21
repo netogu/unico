@@ -5,6 +5,9 @@
 #include "tiny_printf.h"
 #include <stdio.h>
 
+// TODO: Create log object and buffer that stores message and type of events -
+// can later be processed by an app
+
 // prinf macro logging in green
 #define Log_cli(...)                                                           \
   do {                                                                         \
