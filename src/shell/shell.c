@@ -8,9 +8,6 @@
 #define NOCHAR '\0'
 #define SHELL_HOSTNAME "board"
 
-// #define CLI_UART
-#define CLI_USB
-
 extern void shell_cmd_top_exec_cb(struct ush_object *self,
                                   struct ush_file_descriptor const *file,
                                   int argc, char *argv[]);
@@ -21,7 +18,7 @@ static int ush_read(struct ush_object *self, char *ch) {
 
   char readchar = NOCHAR;
 
-#ifdef CLI_USB
+#ifdef SHELL_INTERFACE_USB
   if (tud_cdc_connected() && tud_cdc_available() > 0) {
     // Write single byte if mutex is available
     readchar = cli_usb_getc();
@@ -41,7 +38,7 @@ static int ush_read(struct ush_object *self, char *ch) {
 static int ush_write(struct ush_object *self, char ch) {
   (void)self;
 
-#ifdef CLI_USB
+#ifdef SHELL_INTERFACE_USB
   return cli_usb_putc(ch);
 #else
   return cli_uart_putc(ch);
