@@ -4,9 +4,8 @@
 //--------------------------------------------------------------------+
 // Task List
 //--------------------------------------------------------------------+
-
 const task_descriptor_t task_list[] = {
-    {.name = xstr(TASK_NAME_CLI), .init = task_cli_init, .startup = false},
+    {.name = xstr(TASK_NAME_CLI), .init = task_cli_init, .startup = true},
     {.name = xstr(TASK_NAME_USB),
      .init = task_usb_device_init,
      .startup = true},

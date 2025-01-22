@@ -1,4 +1,5 @@
 #include "bsp.h"
+#include "stm32g4_gpio.h"
 
 int board_load_pinmap(board_t *brd) {
 
@@ -56,7 +57,18 @@ int board_load_pinmap(board_t *brd) {
               .mode = GPIO_MODE_OUTPUT,
               .type = GPIO_TYPE_PUSH_PULL,
               .pull = GPIO_PULL_UP,
-              .speed = GPIO_SPEED_HIGH,
+              .speed = GPIO_SPEED_LOW,
+              .af = GPIO_AF0,
+          },
+
+      .flt_mwr_n =
+          (gpio_t){
+              .port = GPIO_PORT_C,
+              .pin = GPIO_PIN_14,
+              .mode = GPIO_MODE_INPUT,
+              .type = GPIO_TYPE_OPEN_DRAIN,
+              .pull = GPIO_PULL_UP,
+              .speed = GPIO_SPEED_LOW,
               .af = GPIO_AF0,
           },
 
@@ -92,62 +104,51 @@ int board_load_pinmap(board_t *brd) {
               .speed = GPIO_SPEED_VERY_HIGH,
               .af = GPIO_AF0,
           },
-
-      // .spi1_miso = (gpio_t){.port = GPIO_PORT_A,
-      //                       .pin = GPIO_PIN_6,
-      //                       .mode = GPIO_MODE_ALTERNATE,
-      //                       .type = GPIO_TYPE_PUSH_PULL,
-      //                       .pull = GPIO_PULL_NONE,
-      //                       .speed = GPIO_SPEED_HIGH,
-      //                       .af = GPIO_AF6},
-      //
-      // .spi1_mosi = (gpio_t){.port = GPIO_PORT_A,
-      //                       .pin = GPIO_PIN_7,
-      //                       .mode = GPIO_MODE_ALTERNATE,
-      //                       .type = GPIO_TYPE_PUSH_PULL,
-      //                       .pull = GPIO_PULL_NONE,
-      //                       .speed = GPIO_SPEED_HIGH,
-      //                       .af = GPIO_AF6},
-      //
-      // .spi1_clk = (gpio_t){.port = GPIO_PORT_A,
-      //                      .pin = GPIO_PIN_5,
-      //                      .mode = GPIO_MODE_ALTERNATE,
-      //                      .type = GPIO_TYPE_PUSH_PULL,
-      //                      .pull = GPIO_PULL_NONE,
-      //                      .speed = GPIO_SPEED_HIGH,
-      //                      .af = GPIO_AF6},
-      //
-      // .spi1_cs_n = (gpio_t){.port = GPIO_PORT_D,
-      //                       .pin = GPIO_PIN_4,
-      //                       .mode = GPIO_MODE_OUTPUT,
-      //                       .type = GPIO_TYPE_PUSH_PULL,
-      //                       .pull = GPIO_PULL_NONE,
-      //                       .speed = GPIO_SPEED_HIGH,
-      //                       .af = GPIO_AF0},
-      //
-      // .spi4_miso = (gpio_t){.port = GPIO_PORT_E,
-      //                       .pin = GPIO_PIN_5,
-      //                       .mode = GPIO_MODE_ALTERNATE,
-      //                       .type = GPIO_TYPE_OPEN_DRAIN,
-      //                       .pull = GPIO_PULL_UP,
-      //                       .speed = GPIO_SPEED_HIGH,
-      //                       .af = GPIO_AF5},
-      //
-      // .spi4_mosi = (gpio_t){.port = GPIO_PORT_E,
-      //                       .pin = GPIO_PIN_6,
-      //                       .mode = GPIO_MODE_ALTERNATE,
-      //                       .type = GPIO_TYPE_PUSH_PULL,
-      //                       .pull = GPIO_PULL_NONE,
-      //                       .speed = GPIO_SPEED_HIGH,
-      //                       .af = GPIO_AF5},
-      //
-      // .spi4_clk = (gpio_t){.port = GPIO_PORT_E,
-      //                      .pin = GPIO_PIN_2,
-      //                      .mode = GPIO_MODE_ALTERNATE,
-      //                      .type = GPIO_TYPE_PUSH_PULL,
-      //                      .pull = GPIO_PULL_NONE,
-      //                      .speed = GPIO_SPEED_HIGH,
-      //                      .af = GPIO_AF5},
+#ifdef BSP_G4_NUKLEO
+      // on LPUART1
+      .console_tx =
+          (gpio_t){
+              .port = GPIO_PORT_A,
+              .pin = GPIO_PIN_2,
+              .mode = GPIO_MODE_ALTERNATE,
+              .type = GPIO_TYPE_PUSH_PULL,
+              .pull = GPIO_PULL_NONE,
+              .speed = GPIO_SPEED_LOW,
+              .af = GPIO_AF12,
+          },
+      .console_rx =
+          (gpio_t){
+              .port = GPIO_PORT_A,
+              .pin = GPIO_PIN_3,
+              .mode = GPIO_MODE_ALTERNATE,
+              .type = GPIO_TYPE_PUSH_PULL,
+              .pull = GPIO_PULL_NONE,
+              .speed = GPIO_SPEED_LOW,
+              .af = GPIO_AF12,
+          },
+#elif defined(BSP_MLB_revA)
+      // on USART1
+      .console_tx =
+          (gpio_t){
+              .port = GPIO_PORT_E,
+              .pin = GPIO_PIN_0,
+              .mode = GPIO_MODE_ALTERNATE,
+              .type = GPIO_TYPE_PUSH_PULL,
+              .pull = GPIO_PULL_NONE,
+              .speed = GPIO_SPEED_MEDIUM,
+              .af = GPIO_AF7,
+          },
+      .console_rx =
+          (gpio_t){
+              .port = GPIO_PORT_E,
+              .pin = GPIO_PIN_1,
+              .mode = GPIO_MODE_ALTERNATE,
+              .type = GPIO_TYPE_PUSH_PULL,
+              .pull = GPIO_PULL_NONE,
+              .speed = GPIO_SPEED_MEDIUM,
+              .af = GPIO_AF7,
+          },
+#endif
 
       // PWMs
       .pwm_ah =
@@ -213,52 +214,6 @@ int board_load_pinmap(board_t *brd) {
               .pull = GPIO_PULL_NONE,
               .speed = GPIO_SPEED_HIGH,
               .af = GPIO_AF3,
-          },
-
-#ifdef BSP_STM32G4_NUKLEO
-      .lpuart_tx =
-          (gpio_t){
-              .port = GPIO_PORT_A,
-              .pin = GPIO_PIN_2,
-              .mode = GPIO_MODE_ALTERNATE,
-              .type = GPIO_TYPE_PUSH_PULL,
-              .pull = GPIO_PULL_NONE,
-              .speed = GPIO_SPEED_LOW,
-              .af = GPIO_AF12,
-          },
-
-      .lpuart_rx =
-          (gpio_t){
-              .port = GPIO_PORT_A,
-              .pin = GPIO_PIN_3,
-              .mode = GPIO_MODE_ALTERNATE,
-              .type = GPIO_TYPE_PUSH_PULL,
-              .pull = GPIO_PULL_NONE,
-              .speed = GPIO_SPEED_LOW,
-              .af = GPIO_AF12,
-          },
-#endif
-
-      .usart3_tx =
-          (gpio_t){
-              .port = GPIO_PORT_C,
-              .pin = GPIO_PIN_10,
-              .mode = GPIO_MODE_ALTERNATE,
-              .type = GPIO_TYPE_PUSH_PULL,
-              .pull = GPIO_PULL_NONE,
-              .speed = GPIO_SPEED_LOW,
-              .af = GPIO_AF7,
-          },
-
-      .usart3_rx =
-          (gpio_t){
-              .port = GPIO_PORT_C,
-              .pin = GPIO_PIN_11,
-              .mode = GPIO_MODE_ALTERNATE,
-              .type = GPIO_TYPE_PUSH_PULL,
-              .pull = GPIO_PULL_NONE,
-              .speed = GPIO_SPEED_LOW,
-              .af = GPIO_AF7,
           },
 
       .enc_a_pin =
