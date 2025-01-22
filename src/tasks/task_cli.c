@@ -2,7 +2,6 @@
 #include "hal.h"
 #include "rtos.h"
 #include "shell.h"
-#include "shell_header.h"
 #include "tasklist.h"
 
 static TaskHandle_t task_cli_handle;
@@ -13,11 +12,11 @@ static void task_cli_app(void *parameters);
 TaskHandle_t task_cli_init(void) {
   // Create the task
 
-#ifdef SHELL_INTERFACE_USB
+#if defined(SHELL_INTERFACE_USB)
   cli_usb_init();
   board_t *brd = board_get_handle();
   cli_uart_init(&brd->com.console);
-#else
+#elif defined(SHELL_INTERFACE_UART)
   board_t *brd = board_get_handle();
   cli_uart_init(&brd->com.console);
 #endif

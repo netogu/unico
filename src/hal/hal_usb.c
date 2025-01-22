@@ -1,3 +1,4 @@
+#include "bsp.h"
 #include "hal.h"
 #include "tusb.h"
 
@@ -59,3 +60,21 @@ char cli_usb_getc(void) {
 
   return readchar;
 }
+#ifdef SHELL_INTERFACE_USB
+
+int cli_printf(const char *format, ...) {
+
+  int status = 0;
+  char buffer[128];
+  va_list args;
+  va_start(args, format);
+  vsnprintf(buffer, sizeof(buffer), format, args);
+  va_end(args);
+
+  if (xSemaphoreTake(usb_mutex, 10) == pdTRUE) {
+    status = tud_cdc_write((uint8_t *)buffer, strlen(buffer));
+    xSemaphoreGive(usb_mutex);
+  }
+  return status;
+}
+#endif

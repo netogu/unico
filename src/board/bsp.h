@@ -11,8 +11,8 @@ File   : bsp.h
 //------------------------------------------------------+
 // Board Variant
 //------------------------------------------------------+
-#define BSP_G4_NUKLEO
-// #define BSP_MLB_revA
+/*#define BSP_G4_NUKLEO*/
+#define BSP_MLB_revA
 // #define BSP_MLB_G4
 // #define BSP_F50_G4
 
@@ -20,8 +20,7 @@ File   : bsp.h
 // Shell Interface Selection
 //------------------------------------------------------+
 #define SHELL_INTERFACE_USB
-// #define SHELL_INTERFACE_USART3
-// #define SHELL_INTERFACE_LPUART1
+/*#define SHELL_INTERFACE_UART*/
 
 //------------------------------------------------------
 // GPIOs
@@ -29,7 +28,7 @@ File   : bsp.h
 typedef struct board_s {
 
   struct board_dio_s {
-    // Indicators
+    /*// Indicators*/
     gpio_t led_red;
     gpio_t led_green;
     gpio_t led_blue;
@@ -77,15 +76,9 @@ typedef struct board_s {
     gpio_t spi4_men_cs_n;
     gpio_t spi4_oen_cs_n;
 
-// UART
-#ifdef BSP_STM32G4_NUKLEO
-    gpio_t lpuart_tx;
-    gpio_t lpuart_rx;
-#endif
-    gpio_t usart1_tx;
-    gpio_t usart1_rx;
-    gpio_t usart3_tx;
-    gpio_t usart3_rx;
+    // UART Console
+    gpio_t console_tx;
+    gpio_t console_rx;
 
     // USB
     gpio_t usb_dp;

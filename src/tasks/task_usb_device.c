@@ -1,12 +1,11 @@
 
 #include "bsp.h"
+#include "hal.h"
 #include "rtos.h"
 #include "shell.h"
 #include "tasklist.h"
 #include "tiny_printf.h"
 #include "tusb.h"
-
-#define PRIORITY_USB_TASK configMAX_PRIORITIES - 3
 
 /*-----------------------------------------------------------*/
 // Timers
@@ -33,7 +32,7 @@ TaskHandle_t task_usb_device_init(void) {
 
   task_usb_device_handle = xTaskCreateStatic(
       task_usb_device_app, xstr(TASK_NAME_USB), TASK_STACK_SIZE_USB, NULL,
-      PRIORITY_USB_TASK, task_usb_stack, &task_usb_device_tcb);
+      TASK_PRIORITY_USB, task_usb_stack, &task_usb_device_tcb);
 
   if (task_usb_device_handle != NULL) {
     tusb_init();
@@ -83,8 +82,8 @@ void tud_resume_cb(void) {
   if (tud_mounted()) {
     // xTimerChangePeriod(led_blink_timer, pdMS_TO_TICKS(BLINK_MOUNTED), 0);
   } else {
-    // xTimerChangePeriod(led_blink_timer, pdMS_TO_TICKS(BLINK_NOT_MOUNTED), 0);
   }
+  // xTimerChangePeriod(led_blink_timer, pdMS_TO_TICKS(BLINK_NOT_MOUNTED), 0);
 }
 
 // Invoked when cdc when line state changed e.g connected/disconnected
@@ -94,7 +93,6 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts) {
 
   // TODO set some indicator
   if (dtr) {
-    // Terminal connected
   } else {
     // Terminal disconnected
   }

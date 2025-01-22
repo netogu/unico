@@ -48,8 +48,8 @@ typedef struct uart_s {
   } config;
 } uart_t;
 
-void uart_init(uart_t *self);
-void uart_init_dma(uart_t *self);
+int uart_init(uart_t *self);
+int uart_init_dma(uart_t *self);
 int uart_write(uart_t *self, uint8_t *data, uint16_t size);
 int uart_read(uart_t *self, uint8_t *data, uint16_t size);
 int uart_start_dma_tx_transfer(uart_t *self, DMA_Channel_TypeDef *dma_channel);
