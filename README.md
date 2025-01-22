@@ -22,7 +22,7 @@ Light weight, universal controller for power electronics
 **Supported Devices** - STM32G474
 
 ## Acknowledgements
-ecOS is built from the amazing open source contribution of others. Thank you!
+unico is built from the amazing open source contribution of others. Thank you!
 
 ## License
 This project is released under the [MIT License](https://opensource.org/license/mit/).  

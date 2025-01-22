@@ -153,19 +153,42 @@ void LPUART1_IRQHandler(void) {
   }
 }
 
+void USART1_IRQHandler(void) {
+
+  board_t *brd = board_get_handle();
+
+  // Received a byte on LPUART1
+  if (USART1->ISR & USART_ISR_RXNE) {
+    // uart_receive_byte(&brd->lpuart1);
+  }
+
+  // Ready to send byte on LPUART1
+  if (USART1->ISR & USART_ISR_TXE) {
+    // uart_send_byte(&brd->lpuart1);
+    // uart_set_tx_dma_transfer(&brd->lpuart1, DMA1_Channel3);
+  }
+
+  // Idle line detected
+  if (USART1->ISR & USART_ISR_IDLE) {
+    // Clear the IDLE flag
+    USART1->ICR |= USART_ICR_IDLECF;
+    uart_service_rx_dma(&brd->com.console);
+  }
+}
+
 void USART3_IRQHandler(void) {
 
   board_t *brd = board_get_handle();
 
   // Received a byte on USART3
   if (USART3->ISR & USART_ISR_RXNE) {
-    uart_receive_byte(&brd->com.console);
+    // uart_receive_byte(&brd->com.console);
     g_isr_counter.usart3_rx++;
   }
 
   // Ready to send byte on USART3
   if (USART3->ISR & USART_ISR_TXE) {
-    uart_send_byte(&brd->com.console);
+    // uart_send_byte(&brd->com.console);
     g_isr_counter.usart3_tx++;
   }
 

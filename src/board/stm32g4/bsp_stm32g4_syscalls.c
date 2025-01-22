@@ -12,9 +12,6 @@ void _putchar(char character) {
 #ifdef SHELL_INTERFACE_USB
   (void)character;
   // tud_cdc_write_char(character);
-#elif defined(SHELL_INTERFACE_USART3)
-  board_t *brd = board_get_handle();
-  uart_write(&brd.usart3, (uint8_t *)&character, 1);
 #else
   board_t *brd = board_get_handle();
   uart_write(&brd->com.console, (uint8_t *)&character, 1);
@@ -49,11 +46,9 @@ int _read(int file, char *ptr, int len) {
 
 int _write(int file, char *ptr, int len) {
   (void)file;
-  (void)ptr;
 
-  // board_t *brd = board_get_handle();
-  //
-  // uart_write(&brd->com.console, (uint8_t *)ptr, len);
+  board_t *brd = board_get_handle();
+  uart_write(&brd->com.console, (uint8_t *)ptr, len);
 
   return len;
 }

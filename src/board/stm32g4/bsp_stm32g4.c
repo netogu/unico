@@ -20,11 +20,12 @@ void HardFault_Handler(void) { __asm("BKPT #0\n"); }
 //------------------------------------------------------+
 // Clock Selection
 //------------------------------------------------------+
-#ifdef BSP_STM32G4_NUKLEO
+#ifdef BSP_G4_NUKLEO
 #define CLOCK_SETUP_HSI_16MHZ_170MHZ
 #else
 // #define CLOCK_SETUP_HSI_16MHZ_170MHZ
-#define CLOCK_SETUP_HSE_24MHZ_170MHZ
+// #define CLOCK_SETUP_HSE_24MHZ_170MHZ
+#define CLOCK_SETUP_HSE_40MHZ_170MHZ
 #endif
 
 //------------------------------------------------------+
@@ -52,7 +53,6 @@ int board_init(void) {
   board_clock_setup();
   board_dio_setup();
   board_com_setup();
-  board_usb_setup();
 
   LOG_CLEAR();
   printf(timestamp());
@@ -63,7 +63,7 @@ int board_init(void) {
 
 void board_hw_setup(void) {
 
-  // board_usb_setup();
+  board_usb_setup();
   board_pwm_setup();
   board_adc_setup();
   board_encoder_setup();
@@ -118,6 +118,28 @@ static void board_clock_setup() {
   };
 #endif
 
+#ifdef CLOCK_SETUP_HSE_40MHZ_170MHZ
+  // HSE = 40MHz
+  rcc_clock_config_t clock_config = {
+      .sysclk_source = RCC_SYSCLK_SOURCE_PLL,
+      .pll_source = RCC_PLL_SOURCE_HSE,
+      .usbckl_source = RCC_USBCLK_SOURCE_HSI48,
+      .pllm = 4,
+      .plln = 34,
+      .pllp = 2,
+      .pllq = 2,
+      .pllr = 2,
+      .hclk_scale = RCC_CLK_DIV1,
+      .pclk1_scale = RCC_CLK_DIV1,
+      .pclk2_scale = RCC_CLK_DIV1,
+      .adc12clk_source = RCC_ADC_CLK_SOURCE_NONE,
+      .adc345clk_source = RCC_ADC_CLK_SOURCE_NONE,
+      .flash_wait_states = 4,
+      .vos_range = 1,
+      .boost_mode = 1,
+  };
+#endif
+
   rcc_crs_config_t crs_config = {
       .sync_source = RCC_CRS_SYNC_SOURCE_USB,
       .sync_polarity = RCC_CRS_SYNC_POLARITY_RISING,
@@ -153,7 +175,11 @@ static void board_com_setup(void) {
   brd.com.console =
 
       (uart_t){
+#if defined(BSP_G4_NUKLEO)
           .instance = LPUART1,
+#elif defined(BSP_MLB_revA)
+          .instance = USART1,
+#endif
           .config =
               (struct uart_config_s){
                   .baudrate = 115200,
@@ -166,5 +192,5 @@ static void board_com_setup(void) {
 
       };
 
-  // uart_init_dma(&brd.com.console);
+  uart_init_dma(&brd.com.console);
 }
