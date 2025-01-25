@@ -102,15 +102,13 @@ static inline size_t board_usb_get_serial(uint16_t desc_str1[],
 }
 
 #define _PID_MAP(itf, n) ((CFG_TUD_##itf) << (n))
-/*
 #define USB_PID                                                                \
   (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) |           \
    _PID_MAP(MIDI, 3) | _PID_MAP(VENDOR, 4))
-*/
 
 #define USB_VID 0xCafe
 #define USB_BCD 0x0200
-#define USB_PID 0x4001
+// #define USB_PID 0x4001
 
 //--------------------------------------------------------------------+
 // Device Descriptors
@@ -190,8 +188,8 @@ enum {
 // array of pointer to string descriptors
 char const *string_desc_arr[] = {
     (const char[]){0x09, 0x04}, // 0: is supported language is English (0x0409)
-    "TinyUSB",                  // 1: Manufacturer
-    "TinyUSB Device",           // 2: Product
+    "UNICO",                    // 1: Manufacturer
+    "MLB",                      // 2: Product
     NULL,                       // 3: Serials will use unique ID if possible
     "TinyUSB CDC",              // 4: CDC Interface
 };
