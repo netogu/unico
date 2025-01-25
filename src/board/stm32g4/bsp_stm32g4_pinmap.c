@@ -1,5 +1,4 @@
 #include "bsp.h"
-#include "stm32g4_gpio.h"
 
 int board_load_pinmap(board_t *brd) {
 

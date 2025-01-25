@@ -12,7 +12,7 @@ const task_descriptor_t task_list[] = {
     {.name = xstr(TASK_NAME_HMI), .init = task_hmi_init, .startup = true},
     {.name = xstr(TASK_NAME_PWM_CONTROL),
      .init = task_pwm_control_init,
-     .startup = false}};
+     .startup = true}};
 
 //--------------------------------------------------------------------+
 // Bootup

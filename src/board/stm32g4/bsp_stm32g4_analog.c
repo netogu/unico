@@ -8,16 +8,17 @@ static adc_t adc1 = {.regs = ADC1};
 static adc_t adc2 = {.regs = ADC2};
 static adc_t adc3 = {.regs = ADC3};
 static adc_t adc4 = {.regs = ADC4};
+static adc_t adc5 = {.regs = ADC5};
 
-#define ADC_SAMPLE_TIME_1_5_CYCLES 0x0   // 1.5 ADC clock cycles
-#define ADC_SAMPLE_TIME_2_5_CYCLES 0x1   // 2.5 ADC clock cycles
-#define ADC_SAMPLE_TIME_6_5_CYCLES 0x2   // 6.5 ADC clock cycles
-#define ADC_SAMPLE_TIME_12_5_CYCLES 0x3  // 12.5 ADC clock cycles
-#define ADC_SAMPLE_TIME_24_5_CYCLES 0x4  // 24.5 ADC clock cycles
-#define ADC_SAMPLE_TIME_47_5_CYCLES 0x5  // 47.5 ADC clock cycles
-#define ADC_SAMPLE_TIME_92_5_CYCLES 0x6  // 92.5 ADC clock cycles
-#define ADC_SAMPLE_TIME_247_5_CYCLES 0x7 // 247.5 ADC clock cycles
-#define ADC_SAMPLE_TIME_640_5_CYCLES 0x8 // 640.5 ADC clock cycles
+#define ADC_SAMPLE_1_5_CYCLES 0x0   // 1.5 ADC clock cycles
+#define ADC_SAMPLE_2_5_CYCLES 0x1   // 2.5 ADC clock cycles
+#define ADC_SAMPLE_6_5_CYCLES 0x2   // 6.5 ADC clock cycles
+#define ADC_SAMPLE_12_5_CYCLES 0x3  // 12.5 ADC clock cycles
+#define ADC_SAMPLE_24_5_CYCLES 0x4  // 24.5 ADC clock cycles
+#define ADC_SAMPLE_47_5_CYCLES 0x5  // 47.5 ADC clock cycles
+#define ADC_SAMPLE_92_5_CYCLES 0x6  // 92.5 ADC clock cycles
+#define ADC_SAMPLE_247_5_CYCLES 0x7 // 247.5 ADC clock cycles
+#define ADC_SAMPLE_640_5_CYCLES 0x8 // 640.5 ADC clock cycles
 
 //------------------------------------------------------
 // ADC Config
@@ -25,134 +26,282 @@ static adc_t adc4 = {.regs = ADC4};
 void board_adc_setup(void) {
   board_t *brd = board_get_handle();
 
+  const gpio_t analog_pins[] = {
+      {.port = GPIO_PORT_A,
+       .pin = GPIO_PIN_0,
+       .mode = GPIO_MODE_ANALOG}, // Vbatt - ADC12_1
+
+      {.port = GPIO_PORT_A,
+       .pin = GPIO_PIN_1,
+       .mode = GPIO_MODE_ANALOG}, // VM_FB - ADC1_13 + OPAMP1/COMP1
+
+      {.port = GPIO_PORT_A,
+       .pin = GPIO_PIN_2,
+       .mode = GPIO_MODE_ANALOG}, // VGD_MON - ADC1_3
+
+      {.port = GPIO_PORT_A,
+       .pin = GPIO_PIN_3,
+       .mode = GPIO_MODE_ANALOG}, // IM_FB (OCP) - COMP2
+
+      {.port = GPIO_PORT_B,
+       .pin = GPIO_PIN_1,
+       .mode = GPIO_MODE_ANALOG}, // IA_ADC_NC (OPAMP3_VOUT) - ADC3_1
+
+      {.port = GPIO_PORT_B,
+       .pin = GPIO_PIN_11,
+       .mode = GPIO_MODE_ANALOG}, // IC_FB (OPAMP4_VINP + COMP6)
+
+      {.port = GPIO_PORT_B,
+       .pin = GPIO_PIN_12,
+       .mode = GPIO_MODE_ANALOG}, // IC_ADC_NC (OPAMP4_VOUT) - ADC4_3
+
+      {.port = GPIO_PORT_B,
+       .pin = GPIO_PIN_13,
+       .mode = GPIO_MODE_ANALOG}, // IA_FB (OPAMP3_VINP + COMP5)
+
+      {.port = GPIO_PORT_B,
+       .pin = GPIO_PIN_14,
+       .mode = GPIO_MODE_ANALOG}, // IB_FB - ADC5_3 + (OPAMP5_VINP + COMP7)
+
+      {.port = GPIO_PORT_C,
+       .pin = GPIO_PIN_0,
+       .mode = GPIO_MODE_ANALOG}, // TEMP_A - ADC2_6
+
+      {.port = GPIO_PORT_C,
+       .pin = GPIO_PIN_1,
+       .mode = GPIO_MODE_ANALOG}, // TEMP_B - ADC2_7
+
+      {.port = GPIO_PORT_C,
+       .pin = GPIO_PIN_2,
+       .mode = GPIO_MODE_ANALOG}, // TEMP_C - ADC2_8
+
+      {.port = GPIO_PORT_C,
+       .pin = GPIO_PIN_3,
+       .mode = GPIO_MODE_ANALOG}, // IM_FB - ADC1_9
+
+      {.port = GPIO_PORT_C,
+       .pin = GPIO_PIN_4,
+       .mode = GPIO_MODE_ANALOG}, // TEMP_M - ADC2_5
+
+      {.port = GPIO_PORT_E,
+       .pin = GPIO_PIN_7,
+       .mode = GPIO_MODE_ANALOG}, // VM_FB (OVLO) - COMP4_VINP
+
+      {.port = GPIO_PORT_E,
+       .pin = GPIO_PIN_8,
+       .mode = GPIO_MODE_ANALOG}, // VC_FB - ADC5_6
+
+      {.port = GPIO_PORT_E,
+       .pin = GPIO_PIN_9,
+       .mode = GPIO_MODE_ANALOG}, // VA_FB - ADC3_IN2
+
+      {.port = GPIO_PORT_E,
+       .pin = GPIO_PIN_11,
+       .mode = GPIO_MODE_ANALOG}, // VB_FB - ADC345_15
+
+  };
+
   brd->ai = (struct board_ai_s){
 
       //--- Adc1 ---
-      // .adc1_1 =
-      //     (gpio_t){
-      //         .port = GPIO_PORT_A,
-      //         .pin = GPIO_PIN_0,
-      //         .mode = GPIO_MODE_ANALOG,
-      //         .type = GPIO_TYPE_PUSH_PULL,
-      //         .pull = GPIO_PULL_NONE,
-      //         .speed = GPIO_SPEED_LOW,
-      //         .af = GPIO_AF0,
-      //     },
+
+      .vbatt_mon =
+          (adc_input_t){
+              .name = "vbatt_mon",
+              .channel = 1,
+              .scale = 1.0,
+              .offset = 0.0,
+              .units = "V",
+          },
 
       .vm_fb =
           (adc_input_t){
               .name = "vm_fb",
               .channel = 1,
-              .scale = 0.019536,
+              .scale = 1.0,
               .offset = 0.0,
               .units = "V",
           },
 
+      .vgd_mon =
+          (adc_input_t){
+              .name = "vgd_mon",
+              .channel = 1,
+              .scale = 1.0,
+              .offset = 0.0,
+              .units = "V",
+          },
+
+      .im_fb =
+          (adc_input_t){
+              .name = "im_fb",
+              .channel = 9,
+              .scale = 1.0,
+              .offset = 0.0,
+              .units = "A",
+          },
+
       //--- Adc2 ---
-      // .adc2_2 =
-      //     (gpio_t){
-      //         .port = GPIO_PORT_A,
-      //         .pin = GPIO_PIN_1,
-      //         .mode = GPIO_MODE_ANALOG,
-      //         .type = GPIO_TYPE_PUSH_PULL,
-      //         .pull = GPIO_PULL_NONE,
-      //         .speed = GPIO_SPEED_LOW,
-      //         .af = GPIO_AF0,
-      //     },
 
       .temp_a =
           (adc_input_t){
               .name = "temp_a",
-              .channel = 2,
+              .channel = 6,
+              .scale = 1.0,
+              .offset = 0.0,
+              .units = "C",
+          },
+
+      .temp_b =
+          (adc_input_t){
+              .name = "temp_b",
+              .channel = 7,
+              .scale = 1.0,
+              .offset = 0.0,
+              .units = "C",
+          },
+      .temp_c =
+          (adc_input_t){
+              .name = "temp_c",
+              .channel = 8,
+              .scale = 1.0,
+              .offset = 0.0,
+              .units = "C",
+          },
+
+      .temp_m =
+          (adc_input_t){
+              .name = "temp_a",
+              .channel = 5,
               .scale = 1.0,
               .offset = 0.0,
               .units = "C",
           },
 
       //--- Adc3 ---
-      // .adc3_12 =
-      //     (gpio_t){
-      //         .port = GPIO_PORT_B,
-      //         .pin = GPIO_PIN_0,
-      //         .mode = GPIO_MODE_ANALOG,
-      //         .type = GPIO_TYPE_PUSH_PULL,
-      //         .pull = GPIO_PULL_NONE,
-      //         .speed = GPIO_SPEED_LOW,
-      //         .af = GPIO_AF0,
-      //     },
+
       .ia_fb =
           (adc_input_t){
               .name = "ia_fb",
-              .channel = 12,
-              .scale = 1.0 / 62.05,
+              .channel = 1,
+              .scale = 1.0,
               .offset = -2047.5 / 62.05,
               .units = "A",
+          },
+
+      .va_fb =
+          (adc_input_t){
+              .name = "va_fb",
+              .channel = 2,
+              .scale = 1.0,
+              .offset = -2047.5 / 62.05,
+              .units = "V",
           },
 
       //--- Adc4 ---
-      // .adc4_3 =
-      //     (gpio_t){
-      //         .port = GPIO_PORT_B,
-      //         .pin = GPIO_PIN_12,
-      //         .mode = GPIO_MODE_ANALOG,
-      //         .type = GPIO_TYPE_PUSH_PULL,
-      //         .pull = GPIO_PULL_NONE,
-      //         .speed = GPIO_SPEED_LOW,
-      //         .af = GPIO_AF0,
-      //     },
-      .ib_fb =
+
+      .ic_fb =
           (adc_input_t){
-              .name = "ib_fb",
+              .name = "ic_fb",
               .channel = 3,
-              .scale = 1.0 / 62.05,
+              .scale = 1.0,
               .offset = -2047.5 / 62.05,
               .units = "A",
           },
+
+      .vb_fb =
+          (adc_input_t){
+              .name = "vb_fb",
+              .channel = 15,
+              .scale = 1.0,
+              .offset = -2047.5 / 62.05,
+              .units = "V",
+          },
+
+      //--- Adc5 ---
+
+      .ib_fb =
+          (adc_input_t){
+              .name = "ic_fb",
+              .channel = 3,
+              .scale = 1.0,
+              .offset = -2047.5 / 62.05,
+              .units = "A",
+          },
+
+      .vc_fb =
+          (adc_input_t){
+              .name = "vc_fb",
+              .channel = 6,
+              .scale = 1.0,
+              .offset = -2047.5 / 62.05,
+              .units = "V",
+          },
   };
 
-  // gpio_pin_init(&brd->ai.adc1_1);
-  // gpio_pin_init(&brd->ai.adc2_2);
-  // gpio_pin_init(&brd->ai.adc3_12);
-  // gpio_pin_init(&brd->ai.adc4_3);
+  // Configure Analog Pins
+  for (size_t i = 0; i < sizeof(analog_pins) / sizeof(analog_pins[0]); i++) {
+    gpio_pin_init(&analog_pins[i]);
+  }
 
-  adc_register_input(&adc1, &brd->ai.vm_fb, 'r', ADC_SAMPLE_TIME_247_5_CYCLES);
-  adc_register_input(&adc2, &brd->ai.temp_a, 'r', ADC_SAMPLE_TIME_247_5_CYCLES);
-  adc_register_input(&adc3, &brd->ai.ia_fb, 'i', ADC_SAMPLE_TIME_2_5_CYCLES);
-  adc_register_input(&adc4, &brd->ai.ib_fb, 'i', ADC_SAMPLE_TIME_247_5_CYCLES);
-  // adc_register_input(&adc2, &brd->ai.temp_a, 'r',
-  // ADC_SAMPLE_TIME_247_5_CYCLES); adc_register_input(&adc3, &brd->ai.ia_fb,
-  // 'i', ADC_SAMPLE_TIME_6_5_CYCLES); adc_register_input(&adc4, &brd->ai.ib_fb,
-  // 'i', ADC_SAMPLE_TIME_6_5_CYCLES);
+  // TODO: Configure comparators
+  // TODO: Configure OPAMPS
+
+  adc_register_input(&adc1, &brd->ai.vbatt_mon, 'r', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc1, &brd->ai.vm_fb, 'r', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc1, &brd->ai.vgd_mon, 'r', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc1, &brd->ai.im_fb, 'r', ADC_SAMPLE_247_5_CYCLES);
+
+  adc_register_input(&adc2, &brd->ai.temp_a, 'r', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc2, &brd->ai.temp_b, 'r', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc2, &brd->ai.temp_c, 'r', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc2, &brd->ai.temp_m, 'r', ADC_SAMPLE_247_5_CYCLES);
+
+  adc_register_input(&adc3, &brd->ai.ia_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
+  adc_register_input(&adc3, &brd->ai.va_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
+
+  adc_register_input(&adc4, &brd->ai.ic_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
+  adc_register_input(&adc4, &brd->ai.vb_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
+
+  adc_register_input(&adc5, &brd->ai.ib_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
+  adc_register_input(&adc5, &brd->ai.vc_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
 
   brd->ai.vm_fb.data = (uint32_t *)&ADC1->DR;
   brd->ai.temp_a.data = (uint32_t *)&ADC2->DR;
 
-  printf(timestamp());
+  printf("%s", timestamp());
   if (adc_init(&adc1) == 0) {
     LOG_OK("ADC1");
   } else {
     LOG_FAIL("ADC1");
   }
 
-  printf(timestamp());
+  printf("%s", timestamp());
   if (adc_init(&adc2) == 0) {
     LOG_OK("ADC2");
   } else {
     LOG_FAIL("ADC2");
   }
 
-  printf(timestamp());
+  printf("%s", timestamp());
   if (adc_init(&adc3) == 0) {
     LOG_OK("ADC3");
   } else {
     LOG_FAIL("ADC3");
   }
 
-  printf(timestamp());
+  printf("%s", timestamp());
   if (adc_init(&adc4) == 0) {
     LOG_OK("ADC4");
   } else {
     LOG_FAIL("ADC4");
+  }
+
+  printf("%s", timestamp());
+  if (adc_init(&adc5) == 0) {
+    LOG_OK("ADC5");
+  } else {
+    LOG_FAIL("ADC5");
   }
   // Enable EOC interrupt
   {
