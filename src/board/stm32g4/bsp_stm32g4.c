@@ -13,7 +13,12 @@ static board_t brd;
 //------------------------------------------------------+
 // Error Handling
 //------------------------------------------------------+
-void HardFault_Handler(void) { __asm("BKPT #0\n"); }
+void HardFault_Handler(void) {
+  gpio_pin_clear(&brd.dio.led_blue);
+  gpio_pin_clear(&brd.dio.led_green);
+  gpio_pin_set(&brd.dio.led_red);
+  __asm("BKPT #0\n");
+}
 
 #define CRITICAL_ERROR HardFault_Handler()
 
