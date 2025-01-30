@@ -25,7 +25,6 @@ static adc_t adc5 = {.regs = ADC5};
 void board_opamp_setup(void) {
 
   RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
-
   // VM_FB
   OPAMP1->CSR = 0 << OPAMP_CSR_VPSEL_Pos | // VINP0
                 3 << OPAMP_CSR_VMSEL_Pos | // Follower
