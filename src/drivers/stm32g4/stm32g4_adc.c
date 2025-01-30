@@ -350,7 +350,7 @@ static int adc_configure_injected_input_sequence(adc_t *self) {
       reg_val |= self->injected_inputs[i].input->channel
                  << (ADC_JSQR_JSQ1_Pos + i * jsq_offset_bits);
       self->injected_inputs[i].input->data =
-          ((uint32_t *)(&adc_regs->JDR1 + i * jdr_offset_bytes));
+          ((uint32_t *)(&adc_regs->JDR1) + i * jdr_offset_bytes);
     }
   }
 

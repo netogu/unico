@@ -346,15 +346,11 @@ size_t ADC_DR_get_data_callback(struct ush_object *self,
 
   board_t *brd = board_get_handle();
 
-  uint32_t vm_fb = *brd->ai.vm_fb.data;
-  uint32_t ia_fb = *brd->ai.ia_fb.data;
-  uint32_t ib_fb = *brd->ai.ib_fb.data;
-  uint32_t temp_a = *brd->ai.temp_a.data;
-
   static char dr[256];
 
-  snprintf(dr, sizeof(dr), "vm = %ld\t ia = %ld\t ib = %ld\t temp_a =%ld\r\n",
-           vm_fb, ia_fb, ib_fb, temp_a);
+  snprintf(dr, sizeof(dr), "vm = %ld\t ia = %ld\t ib = %ld\t ic =%ld\r\n",
+           *brd->ai.vm_fb.data, *brd->ai.ia_fb.data, *brd->ai.ib_fb.data,
+           *brd->ai.ic_fb.data);
 
   *data = (uint8_t *)dr;
 
