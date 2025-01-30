@@ -71,16 +71,16 @@ int board_load_pinmap(board_t *brd) {
               .af = GPIO_AF0,
           },
 
-      .test_pin0 =
-          (gpio_t){
-              .port = GPIO_PORT_E,
-              .pin = GPIO_PIN_3,
-              .mode = GPIO_MODE_OUTPUT,
-              .type = GPIO_TYPE_PUSH_PULL,
-              .pull = GPIO_PULL_UP,
-              .speed = GPIO_SPEED_HIGH,
-              .af = GPIO_AF0,
-          },
+      .test_pin0 = // on MC_STATUS
+      (gpio_t){
+          .port = GPIO_PORT_D,
+          .pin = GPIO_PIN_15,
+          .mode = GPIO_MODE_OUTPUT,
+          .type = GPIO_TYPE_PUSH_PULL,
+          .pull = GPIO_PULL_UP,
+          .speed = GPIO_SPEED_HIGH,
+          .af = GPIO_AF0,
+      },
 
       .usb_dp =
           (gpio_t){

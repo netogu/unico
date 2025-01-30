@@ -1,8 +1,7 @@
 #include "bsp.h"
 #include "log.h"
+#include "stm32g4.h"
 #include "stm32g474xx.h"
-#include "stm32g4_adc.h"
-#include "stm32g4_gpio.h"
 
 static adc_t adc1 = {.regs = ADC1};
 static adc_t adc2 = {.regs = ADC2};
@@ -19,6 +18,37 @@ static adc_t adc5 = {.regs = ADC5};
 #define ADC_SAMPLE_92_5_CYCLES 0x6  // 92.5 ADC clock cycles
 #define ADC_SAMPLE_247_5_CYCLES 0x7 // 247.5 ADC clock cycles
 #define ADC_SAMPLE_640_5_CYCLES 0x8 // 640.5 ADC clock cycles
+
+//------------------------------------------------------
+// OPAMP Config
+//------------------------------------------------------
+void board_opamp_setup(void) {
+
+  RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+
+  // VM_FB
+  OPAMP1->CSR = 0 << OPAMP_CSR_VPSEL_Pos | // VINP0
+                3 << OPAMP_CSR_VMSEL_Pos | // Follower
+                OPAMP_CSR_HIGHSPEEDEN |
+                OPAMP_CSR_OPAMPINTEN | // Internal connection
+                OPAMP_CSR_OPAMPxEN;
+
+  // IA_FB
+  OPAMP3->CSR = 1 << OPAMP_CSR_VPSEL_Pos | // VINP1
+                3 << OPAMP_CSR_VMSEL_Pos | // Follower, output on PB12
+                OPAMP_CSR_HIGHSPEEDEN | OPAMP_CSR_OPAMPxEN;
+
+  // IC_FB
+  OPAMP4->CSR = 2 << OPAMP_CSR_VPSEL_Pos | // VINP2
+                3 << OPAMP_CSR_VMSEL_Pos | // Follower, output on PB12
+                OPAMP_CSR_HIGHSPEEDEN | OPAMP_CSR_OPAMPxEN;
+
+  // IB_FB
+  OPAMP5->CSR = 0 << OPAMP_CSR_VPSEL_Pos | // VINP0
+                3 << OPAMP_CSR_VMSEL_Pos | OPAMP_CSR_HIGHSPEEDEN |
+                OPAMP_CSR_OPAMPINTEN | // Internal connection
+                OPAMP_CSR_OPAMPxEN;
+}
 
 //------------------------------------------------------
 // ADC Config
@@ -185,7 +215,7 @@ void board_adc_setup(void) {
               .name = "ia_fb",
               .channel = 1,
               .scale = 1.0,
-              .offset = -2047.5 / 62.05,
+              .offset = 0.0,
               .units = "A",
           },
 
@@ -194,7 +224,7 @@ void board_adc_setup(void) {
               .name = "va_fb",
               .channel = 2,
               .scale = 1.0,
-              .offset = -2047.5 / 62.05,
+              .offset = 0.0,
               .units = "V",
           },
 
@@ -205,7 +235,7 @@ void board_adc_setup(void) {
               .name = "ic_fb",
               .channel = 3,
               .scale = 1.0,
-              .offset = -2047.5 / 62.05,
+              .offset = 0.0,
               .units = "A",
           },
 
@@ -214,7 +244,7 @@ void board_adc_setup(void) {
               .name = "vb_fb",
               .channel = 15,
               .scale = 1.0,
-              .offset = -2047.5 / 62.05,
+              .offset = 0.0,
               .units = "V",
           },
 
@@ -225,7 +255,7 @@ void board_adc_setup(void) {
               .name = "ic_fb",
               .channel = 3,
               .scale = 1.0,
-              .offset = -2047.5 / 62.05,
+              .offset = 0.0,
               .units = "A",
           },
 
@@ -234,7 +264,7 @@ void board_adc_setup(void) {
               .name = "vc_fb",
               .channel = 6,
               .scale = 1.0,
-              .offset = -2047.5 / 62.05,
+              .offset = 0.0,
               .units = "V",
           },
   };
@@ -244,18 +274,19 @@ void board_adc_setup(void) {
     gpio_pin_init(&analog_pins[i]);
   }
 
+  board_opamp_setup();
+
   // TODO: Configure comparators
-  // TODO: Configure OPAMPS
 
   adc_register_input(&adc1, &brd->ai.vbatt_mon, 'r', ADC_SAMPLE_247_5_CYCLES);
-  adc_register_input(&adc1, &brd->ai.vm_fb, 'r', ADC_SAMPLE_247_5_CYCLES);
-  adc_register_input(&adc1, &brd->ai.vgd_mon, 'r', ADC_SAMPLE_247_5_CYCLES);
-  adc_register_input(&adc1, &brd->ai.im_fb, 'r', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc1, &brd->ai.vm_fb, 'i', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc1, &brd->ai.vgd_mon, 'i', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc1, &brd->ai.im_fb, 'i', ADC_SAMPLE_247_5_CYCLES);
 
-  adc_register_input(&adc2, &brd->ai.temp_a, 'r', ADC_SAMPLE_247_5_CYCLES);
-  adc_register_input(&adc2, &brd->ai.temp_b, 'r', ADC_SAMPLE_247_5_CYCLES);
-  adc_register_input(&adc2, &brd->ai.temp_c, 'r', ADC_SAMPLE_247_5_CYCLES);
-  adc_register_input(&adc2, &brd->ai.temp_m, 'r', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc2, &brd->ai.temp_a, 'i', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc2, &brd->ai.temp_b, 'i', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc2, &brd->ai.temp_c, 'i', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc2, &brd->ai.temp_m, 'i', ADC_SAMPLE_247_5_CYCLES);
 
   adc_register_input(&adc3, &brd->ai.ia_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
   adc_register_input(&adc3, &brd->ai.va_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
@@ -265,9 +296,6 @@ void board_adc_setup(void) {
 
   adc_register_input(&adc5, &brd->ai.ib_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
   adc_register_input(&adc5, &brd->ai.vc_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
-
-  brd->ai.vm_fb.data = (uint32_t *)&ADC1->DR;
-  brd->ai.temp_a.data = (uint32_t *)&ADC2->DR;
 
   printf("%s", timestamp());
   if (adc_init(&adc1) == 0) {
@@ -312,8 +340,11 @@ void board_adc_setup(void) {
 
   adc_start_regular_sampling(&adc1);
   adc_start_regular_sampling(&adc2);
+  adc_start_injected_sampling(&adc1);
+  adc_start_injected_sampling(&adc2);
   adc_start_injected_sampling(&adc3);
   adc_start_injected_sampling(&adc4);
+  adc_start_injected_sampling(&adc5);
 }
 
 void ADC3_IRQHandler(void) {
