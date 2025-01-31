@@ -108,7 +108,7 @@ typedef struct board_s {
 
   struct board_hw_t {
     pwm_3ph_t mcpwm;
-    encoder_t encoder;
+    encoder_t menc;
   } hw;
 
   struct board_com_t {

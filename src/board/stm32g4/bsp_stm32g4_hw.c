@@ -131,5 +131,5 @@ __attribute__((unused)) static void board_gate_driver_setup(void) {
 
 void board_encoder_setup(void) {
   board_t *brd = board_get_handle();
-  encoder_init(&brd->hw.encoder);
+  encoder_init(&brd->hw.menc, 1024);
 }

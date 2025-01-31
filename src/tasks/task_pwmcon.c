@@ -6,67 +6,28 @@
 
 #include "arm_math.h"
 #include "bsp.h"
+#include "encoder.h"
 #include "hal.h"
+#include "lib/foc.h"
 #include "math.h"
 #include "tasklist.h"
 #include "taskmsg.h"
 
-#define ANGLE_CORDIC                                                           \
-  (int32_t)0x10000000               /* pi/8 in CORDIC input angle mapping */
-#define MODULUS (int32_t)0x7FFFFFFF /* 1 */
-#define COS_REF (int32_t)0x7641AF3C /* cos(pi/8) reference value */
-#define SIN_REF (int32_t)0x30FBC54D /* sin(pi/8) reference value */
-#define DELTA                                                                  \
-  (int32_t)0x00001000 /* Max residual error for cos and sin, with 6 cycle      \
-                         precision: 2^-19 max residual error, ie 31-19=12 LSB, \
-                         ie <0x1000 */
-#define COS_120D (float)-0.50
-#define SIN_120D (float)+0.866025404
-#define COS_240D COS_120D
-#define SIN_240D -SIN_120D
+enum pwmcon_encoder_type {
+  PWMCON_ENCODER_TYPE_SW,
+  PWMCON_ENCODER_TYPE_ABZ,
+  PWMCON_ENCODER_TYPE_DIRECT_PWM,
+};
 
-typedef struct pwmcon_foc_t {
-  struct {
-    float vbus;
-    float angle_rad;
-    float iphase[3];
-  } fb;
-  struct {
-    float vq;
-    float vd;
-  } dq0;
+static foc_t foc = {0};
+static encoder_t sw_enc;
+static uint32_t sw_enc_count_rate;
+static uint32_t sw_enc_count;
+static uint32_t sw_enc_cpr = 10000;
+static enum pwmcon_encoder_type encoder_type = PWMCON_ENCODER_TYPE_ABZ;
 
-  struct {
-    float vphase[3];
-  } abc;
-
-  struct {
-    float duty[3];
-  } pwm;
-
-  struct {
-    float cos_f32;
-    float sin_f32;
-    float valpha;
-    float vbeta;
-    uint32_t count;
-    uint32_t count_rate;
-    enum {
-      PWMCON_FOC_MODE_OPEN_LOOP,
-      PWMCON_FOC_MODE_MANUAL,
-      PWMCON_FOC_MODE_FORCE_PWM,
-    } mode;
-  } _int;
-} pwmcon_foc_t;
-
-static pwmcon_foc_t foc = {0};
 static pwmcon_msg_t msg = {0};
 static void task_pwmcon_timer_callback(void);
-
-static TaskHandle_t task_pwm_control_handle;
-static StaticTask_t task_pwm_control_tcb;
-static StackType_t task_pwm_control_stack[TASK_STACK_SIZE_PWM_CONTROL];
-static void task_pwm_control(void *parameters);
 
 TaskHandle_t task_pwm_control_init(void) {
   // Create the task
@@ -83,25 +44,6 @@ TaskHandle_t task_pwm_control_init(void) {
   }
 }
 
-static float fast_fmodf(float x, float y) {
-  if (y == 0.0f) {
-    return NAN; // Return NaN for undefined behavior
-  }
-
-  // Calculate the integer multiple of y closest to x
-  float quotient = (int)(x / y); // Cast to int truncates toward zero
-  float result = x - quotient * y;
-
-  // Adjust result if it goes out of range due to truncation
-  if (result < 0.0f && y > 0.0f) {
-    result += y;
-  } else if (result > 0.0f && y < 0.0f) {
-    result += y;
-  }
-
-  return result;
-}
-
 static inline void task_pwmcon_notify(void) {
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
   vTaskNotifyGiveIndexedFromISR(task_pwm_control_handle, 0,
@@ -109,71 +51,66 @@ static inline void task_pwmcon_notify(void) {
   portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
-static inline int pwmcon_foc_process_message(pwmcon_foc_t *foc,
-                                             pwmcon_msg_t *msg) {
-
-  const uint32_t ENCODER_COUNTS_PER_REV = 1024;
+static inline int pwmcon_foc_process_message(foc_t *foc, pwmcon_msg_t *msg) {
 
   board_t *brd = board_get_handle();
 
-  foc->fb.vbus =
-      (float)(msg->vbus_mv + 1) / 1000.0f;   // Convert to volts from mV
-  foc->dq0.vq = (float)msg->vq_mv / 1000.0f; // Convert to volts from mV
-  foc->dq0.vd = (float)msg->vd_mv / 1000.0f; // Convert to volts from mV
-  foc->_int.count_rate = msg->count_rate;
+  foc->vbus = (float)(msg->vbus_mv + 1) / 1000.0f; // Convert to volts from mV
+  foc->vq = (float)msg->vq_mv / 1000.0f;           // Convert to volts from mV
+  foc->vd = (float)msg->vd_mv / 1000.0f;           // Convert to volts from mV
+  sw_enc_count_rate = msg->count_rate;
 
-  if (msg->mode == PWMCON_FOC_MODE_MANUAL) {
-    if (foc->_int.mode != PWMCON_FOC_MODE_MANUAL) {
-      uint32_t count = foc->_int.count;
-      count = (count * ENCODER_COUNTS_PER_REV) / 100000;
-      brd->hw.encoder.load(count);
-      foc->_int.count = count;
-      foc->_int.mode = PWMCON_FOC_MODE_MANUAL;
+  if (msg->mode == PWMCON_ENCODER_TYPE_ABZ) {
+    if (encoder_type != PWMCON_ENCODER_TYPE_ABZ) {
+      uint32_t count = (sw_enc_count * brd->hw.menc.count_per_rev) / sw_enc_cpr;
+      encoder_load_count(&brd->hw.menc, count);
+      // Update FOC angle
+      encoder_type = PWMCON_ENCODER_TYPE_ABZ;
     }
 
     // foc->fb.angle_norm_q31 = brd->encoder.read();
     // foc->fb.angle_rad = (float) foc->fb.angle_norm_q31/1024.0f * 2*PI;
   } else
 
-      if (msg->mode == PWMCON_FOC_MODE_OPEN_LOOP) {
-    if (foc->_int.mode != PWMCON_FOC_MODE_OPEN_LOOP) {
-      uint32_t count = foc->_int.count;
-      count = (count * 100000) / 1024;
-      foc->_int.count = count;
-      foc->_int.mode = PWMCON_FOC_MODE_OPEN_LOOP;
+      if (msg->mode == PWMCON_ENCODER_TYPE_SW) {
+    if (encoder_type != PWMCON_ENCODER_TYPE_SW) {
+      uint32_t count = encoder_read_count(&brd->hw.menc);
+      sw_enc_count = (count * sw_enc_cpr) / brd->hw.menc.count_per_rev;
+      // Update FOC angle
+      encoder_type = PWMCON_ENCODER_TYPE_SW;
     }
     // foc->fb.angle_norm_q31 += msg->count_rate;
     // foc->fb.angle_norm_q31 > 100000 ? foc->fb.angle_norm_q31 = 0 : 0;
     // foc->fb.angle_rad = (float) foc->fb.angle_norm_q31/100000.0f * 2*PI;
-  } else if (msg->mode == PWMCON_FOC_MODE_FORCE_PWM) {
+  } else if (msg->mode == PWMCON_ENCODER_TYPE_DIRECT_PWM) {
+    uint32_t mcpwm_duty[3];
     for (int i = 0; i < 3; i++) {
-      foc->pwm.duty[i] = (float)msg->duty_cmd[i] / 100.0f;
+      mcpwm_duty[i] = (float)msg->duty_cmd[i] / 100.0f;
     }
-    pwm_3ph_set_duty(&brd->hw.mcpwm, foc->pwm.duty[0], foc->pwm.duty[1],
-                     foc->pwm.duty[2]);
-    foc->_int.mode = PWMCON_FOC_MODE_FORCE_PWM;
+    pwm_3ph_set_duty(&brd->hw.mcpwm, mcpwm_duty[0], mcpwm_duty[1],
+                     mcpwm_duty[2]);
+    encoder_type = PWMCON_ENCODER_TYPE_DIRECT_PWM;
 
   } else {
-    cli_printf("FOC Message Error\r\n");
+    cli_printf("PWMCON Message Error\r\n");
     return -1;
   }
 
   return 0;
 }
 
-static void pwmcon_foc_update(pwmcon_foc_t *foc) {
+static void pwmcon_foc_update(foc_t *foc) {
   // Timer Callback
 
   board_t *brd = board_get_handle();
-  // gpio_pin_set(&brd->io.test_pin0);
-  // task_pwmcon_notify();
-  // // gpio_pin_clear(&brd->io.test_pin0);
+  uint32_t count;
+  float angle_rad;
 
   // Get Angle
-  switch (foc->_int.mode) {
-  case PWMCON_FOC_MODE_MANUAL:
-    foc->_int.count = brd->hw.encoder.read();
-    foc->fb.angle_rad = (float)foc->_int.count / 1024.0f * 2 * PI;
+  switch (encoder_type) {
+  case PWMCON_ENCODER_TYPE_ABZ:
+    count = encoder_read_count(&brd->hw.menc);
+    angle = (float)foc->_int.count / 1024.0f * 2 * PI;
     break;
   case PWMCON_FOC_MODE_OPEN_LOOP:
     foc->_int.count += foc->_int.count_rate;
