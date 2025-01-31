@@ -25,9 +25,7 @@ int encoder_init(encoder_t *self, uint32_t count_per_rev) {
 
   // Limit Range to count_per_rev
   timer->ARR = count_per_rev;
-  self->count_per_rev = count_per_rev;
-
-  self->count = (uint32_t *)&TIM5->CNT;
+  self->cpr = count_per_rev;
 
   // Enable TIM5
   timer->CR1 |= TIM_CR1_CEN;
@@ -35,21 +33,9 @@ int encoder_init(encoder_t *self, uint32_t count_per_rev) {
   return 0;
 }
 
-uint32_t encoder_read_count(encoder_t *self) { return *self->count; }
+void encoder_update(encoder_t *self) { self->count = TIM5->CNT; }
 
 void encoder_load_count(encoder_t *self, uint32_t value) {
-  *self->count = value;
-}
-
-int encoder_read_angle_q31(encoder_t *self, uint32_t *angle) {
-  (void)self;
-  (void)angle;
-  return 0;
-}
-float encoder_read_angle_float(encoder_t *self) {
-  return (float)*self->count / self->count_per_rev * 360.0;
-}
-
-uint32_t encoder_get_count_per_rev(encoder_t *self) {
-  return self->_count_per_rev;
+  self->count = value;
+  TIM5->CNT = value;
 }

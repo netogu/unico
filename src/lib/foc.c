@@ -95,22 +95,3 @@ static inline int foc_update_angle(foc_t *self, encoder_t *encoder) {
   int foc_set_speed(foc_t * self, float omega);
   int foc_run(foc_t * self);
   int foc_stop(foc_t * self);
-
-  static float fast_fmodf(float x, float y) {
-    if (y == 0.0f) {
-      return NAN; // Return NaN for undefined behavior
-    }
-
-    // Calculate the integer multiple of y closest to x
-    float quotient = (int)(x / y); // Cast to int truncates toward zero
-    float result = x - quotient * y;
-
-    // Adjust result if it goes out of range due to truncation
-    if (result < 0.0f && y > 0.0f) {
-      result += y;
-    } else if (result > 0.0f && y < 0.0f) {
-      result += y;
-    }
-
-    return result;
-  }
