@@ -73,6 +73,75 @@ static const struct ush_descriptor ush_desc = {
     .hostname = SHELL_HOSTNAME,                // hostname (in prompt)
 };
 
+// print ADC Callback
+static void adc_test_read_callback(struct ush_object *self,
+                                   struct ush_file_descriptor const *file,
+                                   int argc, char *argv[]) {
+  (void)self;
+  (void)file;
+
+  // arguments count validation
+  if (argc != 2) {
+    // return predefined error message
+    ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+    return;
+  }
+
+  int samples = atoi(argv[1]);
+  if (samples < 0 || samples > 5000) {
+    ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+    return;
+  }
+
+  board_t *brd = board_get_handle();
+
+  struct adc_measurement {
+    adc_input_t ain;
+    uint32_t min;
+    uint32_t max;
+    uint32_t avg;
+  };
+
+  struct adc_measurement adc_list[3];
+  adc_list[0].ain = brd->ai.ia_fb;
+  adc_list[1].ain = brd->ai.ib_fb;
+  adc_list[2].ain = brd->ai.ic_fb;
+  // adc_list[3].ain = brd->ai.temp_a;
+
+  for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
+    adc_list[i].min = 4096;
+    adc_list[i].avg = 0;
+    adc_list[i].max = 0;
+  }
+
+  for (int n = 0; n < samples; n++) {
+
+    for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
+      uint32_t value = *adc_list[i].ain.data;
+      adc_list[i].min = (value < adc_list[i].min) ? value : adc_list[i].min;
+      adc_list[i].max = (value > adc_list[i].max) ? value : adc_list[i].max;
+      adc_list[i].avg += value;
+      cli_printf("%s=%04d ", adc_list[i].ain.name, value);
+    }
+
+    cli_printf("\n\r");
+    tud_cdc_write_flush();
+
+    vTaskDelay(1);
+  }
+
+  cli_printf("\n\r");
+  for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
+    vTaskDelay(1);
+    adc_list[i].avg = adc_list[i].avg / samples;
+    cli_printf("%s: min=%04d avg=%04d max=%04d\r\n", adc_list[i].ain.name,
+               adc_list[i].min, adc_list[i].avg, adc_list[i].max);
+    tud_cdc_write_flush();
+  }
+
+  return;
+}
+
 // drive enable callback
 static void drv_en_callback(struct ush_object *self,
                             struct ush_file_descriptor const *file, int argc,
@@ -408,6 +477,12 @@ static const struct ush_file_descriptor cmd_files[] = {
         .description = "enable/disable gate driver",
         .help = "usage: drv_en 1|0\r\n",
         .exec = drv_en_callback,
+    },
+    {
+        .name = "adc_test",
+        .description = "Test phase current ADC measurement",
+        .help = "usage: adc [samples]\r\n",
+        .exec = adc_test_read_callback,
     },
     {
         .name = "mpwr_en",
