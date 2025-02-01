@@ -12,7 +12,11 @@ const task_descriptor_t task_list[] = {
     {.name = xstr(TASK_NAME_HMI), .init = task_hmi_init, .startup = true},
     {.name = xstr(TASK_NAME_PWM_CONTROL),
      .init = task_pwm_control_init,
-     .startup = true}};
+     .startup = true},
+    {.name = xstr(TASK_NAME_ADCMON),
+     .init = task_adcmon_init,
+     .startup = false},
+};
 
 //--------------------------------------------------------------------+
 // Bootup
@@ -26,6 +30,7 @@ void bootup_system(void) {
 
   /* Start the scheduler. */
   vTaskStartScheduler();
+  // Should not get here
 }
 
 const size_t task_list_size = sizeof(task_list) / sizeof(task_list[0]);
