@@ -1,7 +1,6 @@
 #include "bsp.h"
 #include "log.h"
 #include "stm32g4.h"
-#include "stm32g474xx.h"
 
 static adc_t adc1 = {.regs = ADC1};
 static adc_t adc2 = {.regs = ADC2};
@@ -251,7 +250,7 @@ void board_adc_setup(void) {
 
       .ib_fb =
           (adc_input_t){
-              .name = "ic_fb",
+              .name = "ib_fb",
               .channel = 3,
               .scale = 1.0,
               .offset = 0.0,
