@@ -67,9 +67,9 @@ void board_pwm_setup(void) {
 //------------------------------------------------------
 
 __attribute__((unused)) static void board_spi_setup(void) {
-
   // brd.spi3 =
   //     (struct spi){
+
   //         .instance = SPI3,
   //         .data_size = 8,
   //         .baudrate = SPI_BAUDRATE_PCLK_DIV_128,
@@ -131,5 +131,12 @@ __attribute__((unused)) static void board_gate_driver_setup(void) {
 
 void board_encoder_setup(void) {
   board_t *brd = board_get_handle();
-  encoder_init(&brd->hw.encoder);
+
+  brd->hw.encoder = (qenc_t){
+      .timer = TIM2,
+      .mode = QENC_MODE_ABZ,
+      .cpr = 1024,
+  };
+
+  qenc_init(&brd->hw.encoder);
 }

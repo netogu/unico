@@ -2,6 +2,7 @@
 #include "bsp.h"
 #include "hal.h"
 #include "rtos.h"
+#include "stm32g474xx.h"
 #include "taskmsg.h"
 #include "tusb.h"
 
@@ -77,21 +78,23 @@ static const struct ush_descriptor ush_desc = {
 static void adc_test_read_callback(struct ush_object *self,
                                    struct ush_file_descriptor const *file,
                                    int argc, char *argv[]) {
-  (void)self;
   (void)file;
+  (void)self;
+  (void)argc;
+  (void)argv;
 
   // arguments count validation
-  if (argc != 2) {
-    // return predefined error message
-    ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
-    return;
-  }
-
-  int samples = atoi(argv[1]);
-  if (samples < 0 || samples > 5000) {
-    ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
-    return;
-  }
+  // if (argc != 2) {
+  //   // return predefined error message
+  //   ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+  //   return;
+  // }
+  //
+  // int samples = atoi(argv[1]);
+  // if (samples < 0 || samples > 500000) {
+  //   ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+  //   return;
+  // }
 
   board_t *brd = board_get_handle();
 
@@ -102,11 +105,15 @@ static void adc_test_read_callback(struct ush_object *self,
     uint32_t avg;
   };
 
-  struct adc_measurement adc_list[3];
+  TIM_TypeDef *enc_reg = brd->hw.encoder.timer;
+
+  adc_input_t enc = {.name = "enc", .data = &enc_reg->CNT};
+
+  struct adc_measurement adc_list[4];
   adc_list[0].ain = brd->ai.ia_fb;
   adc_list[1].ain = brd->ai.ib_fb;
   adc_list[2].ain = brd->ai.ic_fb;
-  // adc_list[3].ain = brd->ai.temp_a;
+  adc_list[3].ain = enc;
 
   for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
     adc_list[i].min = 4096;
@@ -114,7 +121,16 @@ static void adc_test_read_callback(struct ush_object *self,
     adc_list[i].max = 0;
   }
 
-  for (int n = 0; n < samples; n++) {
+  // for (int n = 0; n < samples; n++) {
+  uint32_t samples = 0;
+
+  while (true) {
+    samples++;
+
+    if (cli_usb_getc() == 0x03) {
+      // Ctrl + C
+      break;
+    }
 
     for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
       uint32_t value = *adc_list[i].ain.data;
@@ -131,10 +147,11 @@ static void adc_test_read_callback(struct ush_object *self,
   }
 
   cli_printf("\n\r");
+  cli_printf("samples: %ld\r\n", samples);
   for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
     vTaskDelay(1);
     adc_list[i].avg = adc_list[i].avg / samples;
-    cli_printf("%s: min=%04d avg=%04d max=%04d\r\n", adc_list[i].ain.name,
+    cli_printf("%6s: min=%04d avg=%04d max=%04d\r\n", adc_list[i].ain.name,
                adc_list[i].min, adc_list[i].avg, adc_list[i].max);
     tud_cdc_write_flush();
   }

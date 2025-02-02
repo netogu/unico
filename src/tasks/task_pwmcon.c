@@ -126,7 +126,7 @@ static inline int pwmcon_foc_process_message(pwmcon_foc_t *foc,
     if (foc->_int.mode != PWMCON_FOC_MODE_MANUAL) {
       uint32_t count = foc->_int.count;
       count = (count * ENCODER_COUNTS_PER_REV) / 100000;
-      brd->hw.encoder.load(count);
+      // brd->hw.encoder.load(count);
       foc->_int.count = count;
       foc->_int.mode = PWMCON_FOC_MODE_MANUAL;
     }
@@ -172,7 +172,7 @@ static void pwmcon_foc_update(pwmcon_foc_t *foc) {
   // Get Angle
   switch (foc->_int.mode) {
   case PWMCON_FOC_MODE_MANUAL:
-    foc->_int.count = brd->hw.encoder.read();
+    // foc->_int.count = brd->hw.encoder.read();
     foc->fb.angle_rad = (float)foc->_int.count / 1024.0f * 2 * PI;
     break;
   case PWMCON_FOC_MODE_OPEN_LOOP:
