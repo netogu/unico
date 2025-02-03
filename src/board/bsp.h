@@ -5,8 +5,8 @@ File   : bsp.h
 
 #pragma once
 
+#include "hal.h"
 #include "stm32g4.h"
-#include "stm32g4_qenc.h"
 
 //------------------------------------------------------+
 // Board Variant
@@ -108,7 +108,7 @@ typedef struct board_s {
 
   struct board_hw_t {
     pwm_3ph_t mcpwm;
-    qenc_t encoder;
+    encoder_t encoder;
   } hw;
 
   struct board_com_t {

@@ -105,9 +105,8 @@ static void adc_test_read_callback(struct ush_object *self,
     uint32_t avg;
   };
 
-  TIM_TypeDef *enc_reg = brd->hw.encoder.timer;
-
-  adc_input_t enc = {.name = "enc", .data = &enc_reg->CNT};
+  uint32_t enc_data = 0;
+  adc_input_t enc = {.name = "enc", .data = &enc_data};
 
   struct adc_measurement adc_list[4];
   adc_list[0].ain = brd->ai.ia_fb;
@@ -121,15 +120,18 @@ static void adc_test_read_callback(struct ush_object *self,
     adc_list[i].max = 0;
   }
 
-  // for (int n = 0; n < samples; n++) {
-  uint32_t samples = 0;
+  uint32_t samples = 1;
+  while (samples) {
+    enc_data = encoder_read_count(&brd->hw.encoder);
 
-  while (true) {
-    samples++;
+    uint8_t c = cli_usb_getc();
 
-    if (cli_usb_getc() == 0x03) {
+    if (c == 0x03) {
       // Ctrl + C
       break;
+    } else if (c == 'z') {
+      // zero encoder
+      encoder_set_offset(&brd->hw.encoder, 0);
     }
 
     for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
@@ -143,17 +145,17 @@ static void adc_test_read_callback(struct ush_object *self,
     cli_printf("\n\r");
     tud_cdc_write_flush();
 
+    samples++;
     vTaskDelay(1);
   }
 
-  cli_printf("\n\r");
-  cli_printf("samples: %ld\r\n", samples);
+  cli_printf("\n\rsamples: %ld\r\n", samples);
   for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
-    vTaskDelay(1);
     adc_list[i].avg = adc_list[i].avg / samples;
-    cli_printf("%6s: min=%04d avg=%04d max=%04d\r\n", adc_list[i].ain.name,
+    cli_printf("%7s: min=%04d avg=%04d max=%04d\r\n", adc_list[i].ain.name,
                adc_list[i].min, adc_list[i].avg, adc_list[i].max);
     tud_cdc_write_flush();
+    vTaskDelay(1);
   }
 
   return;

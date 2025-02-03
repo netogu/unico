@@ -1,6 +1,8 @@
 
 #include "bsp.h"
+#include "hal_encoder.h"
 #include "log.h"
+#include "stm32g4_qenc.h"
 
 //------------------------------------------------------+
 // PWM Config
@@ -128,15 +130,27 @@ __attribute__((unused)) static void board_gate_driver_setup(void) {
 //------------------------------------------------------
 // Encoder
 //------------------------------------------------------
+static qenc_t menc_abz = (qenc_t){
+    .timer = TIM2,
+    .mode = QENC_MODE_ABZ,
+    .cpr = 400,
+};
+
+uint32_t menc_read(void) { return qenc_read(&menc_abz); }
+uint32_t menc_get_cpr(void) { return menc_abz.cpr; }
+void menc_set_offset(uint32_t offset) { qenc_load(&menc_abz, offset); }
+void menc_update(void) { __NOP(); }
+
+encoder_ops_t menc_ops = (encoder_ops_t){
+    .read = menc_read,
+    .get_cpr = menc_get_cpr,
+    .set_offset = menc_set_offset,
+    .update = menc_update,
+};
 
 void board_encoder_setup(void) {
   board_t *brd = board_get_handle();
 
-  brd->hw.encoder = (qenc_t){
-      .timer = TIM2,
-      .mode = QENC_MODE_ABZ,
-      .cpr = 1024,
-  };
-
-  qenc_init(&brd->hw.encoder);
+  qenc_init(&menc_abz);
+  encoder_init(&brd->hw.encoder, menc_ops);
 }
