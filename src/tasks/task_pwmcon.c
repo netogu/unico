@@ -7,7 +7,7 @@
 #include "arm_math.h"
 #include "bsp.h"
 #include "hal.h"
-#include "math.h"
+#include "hal_encoder.h"
 #include "tasklist.h"
 #include "taskmsg.h"
 
@@ -83,24 +83,24 @@ TaskHandle_t task_pwm_control_init(void) {
   }
 }
 
-static float fast_fmodf(float x, float y) {
-  if (y == 0.0f) {
-    return NAN; // Return NaN for undefined behavior
-  }
-
-  // Calculate the integer multiple of y closest to x
-  float quotient = (int)(x / y); // Cast to int truncates toward zero
-  float result = x - quotient * y;
-
-  // Adjust result if it goes out of range due to truncation
-  if (result < 0.0f && y > 0.0f) {
-    result += y;
-  } else if (result > 0.0f && y < 0.0f) {
-    result += y;
-  }
-
-  return result;
-}
+// static float fast_fmodf(float x, float y) {
+//   if (y == 0.0f) {
+//     return NAN; // Return NaN for undefined behavior
+//   }
+//
+//   // Calculate the integer multiple of y closest to x
+//   float quotient = (int)(x / y); // Cast to int truncates toward zero
+//   float result = x - quotient * y;
+//
+//   // Adjust result if it goes out of range due to truncation
+//   if (result < 0.0f && y > 0.0f) {
+//     result += y;
+//   } else if (result > 0.0f && y < 0.0f) {
+//     result += y;
+//   }
+//
+//   return result;
+// }
 
 static inline void task_pwmcon_notify(void) {
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -112,8 +112,6 @@ static inline void task_pwmcon_notify(void) {
 static inline int pwmcon_foc_process_message(pwmcon_foc_t *foc,
                                              pwmcon_msg_t *msg) {
 
-  const uint32_t ENCODER_COUNTS_PER_REV = 1024;
-
   board_t *brd = board_get_handle();
 
   foc->fb.vbus =
@@ -124,11 +122,11 @@ static inline int pwmcon_foc_process_message(pwmcon_foc_t *foc,
 
   if (msg->mode == PWMCON_FOC_MODE_MANUAL) {
     if (foc->_int.mode != PWMCON_FOC_MODE_MANUAL) {
-      uint32_t count = foc->_int.count;
-      count = (count * ENCODER_COUNTS_PER_REV) / 100000;
+      // uint32_t count = foc->_int.count;
+      // count = (count * ENCODER_COUNTS_PER_REV) / 100000;
       // brd->hw.encoder.load(count);
-      foc->_int.count = count;
-      foc->_int.mode = PWMCON_FOC_MODE_MANUAL;
+      // foc->_int.count = count;
+      // foc->_int.mode = PWMCON_FOC_MODE_MANUAL;
     }
 
     // foc->fb.angle_norm_q31 = brd->encoder.read();
@@ -169,29 +167,30 @@ static void pwmcon_foc_update(pwmcon_foc_t *foc) {
   // task_pwmcon_notify();
   // // gpio_pin_clear(&brd->io.test_pin0);
 
-  // Get Angle
-  switch (foc->_int.mode) {
-  case PWMCON_FOC_MODE_MANUAL:
-    // foc->_int.count = brd->hw.encoder.read();
-    foc->fb.angle_rad = (float)foc->_int.count / 1024.0f * 2 * PI;
-    break;
-  case PWMCON_FOC_MODE_OPEN_LOOP:
-    foc->_int.count += foc->_int.count_rate;
-    if (foc->_int.count > 100000) {
-      foc->_int.count = 0;
-    }
-    foc->fb.angle_rad = (float)foc->_int.count / 100000.0f * 2 * PI;
-    break;
-  case PWMCON_FOC_MODE_FORCE_PWM:
-    // No FOC needed
-    return;
-    break;
-  default:
-    break;
-  }
+  // // Get Angle
+  // switch (foc->_int.mode) {
+  // case PWMCON_FOC_MODE_MANUAL:
+  //   // foc->_int.count = brd->hw.encoder.read();
+  //   foc->fb.angle_rad = (float)foc->_int.count / 1024.0f * 2 * PI;
+  //   break;
+  // case PWMCON_FOC_MODE_OPEN_LOOP:
+  //   foc->_int.count += foc->_int.count_rate;
+  //   if (foc->_int.count > 100000) {
+  //     foc->_int.count = 0;
+  //   }
+  //   foc->fb.angle_rad = (float)foc->_int.count / 100000.0f * 2 * PI;
+  //   break;
+  // case PWMCON_FOC_MODE_FORCE_PWM:
+  //   // No FOC needed
+  //   return;
+  //   break;
+  // default:
+  //   break;
+  // }
 
-  float angle_rad_norm = fast_fmodf(foc->fb.angle_rad, 2.0f * PI) / (2.0f * PI);
-  int32_t angle_rad_q31 = f32_to_q31(angle_rad_norm) << 1;
+  // float angle_rad_norm = fast_fmodf(foc->fb.angle_rad, 2.0f * PI) / (2.0f *
+  // PI); int32_t angle_rad_q31 = f32_to_q31(angle_rad_norm) << 1;
+  int32_t angle_rad_q31 = encoder_read_angle_q31(&brd->hw.encoder);
 
   cordic_write(angle_rad_q31);
   int32_t cos_q31 = cordic_read();

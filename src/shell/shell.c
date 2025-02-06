@@ -1,6 +1,7 @@
 #include "shell.h"
 #include "bsp.h"
 #include "hal.h"
+#include "hal_encoder.h"
 #include "rtos.h"
 #include "stm32g474xx.h"
 #include "taskmsg.h"
@@ -106,13 +107,16 @@ static void adc_test_read_callback(struct ush_object *self,
   };
 
   uint32_t enc_data = 0;
-  adc_input_t enc = {.name = "enc", .data = &enc_data};
+  int32_t angle_q31 = 0;
+  adc_input_t enc_raw = {.name = "enc", .data = &enc_data};
+  adc_input_t enc_q31 = {.name = "angle", .data = (uint32_t *)&angle_q31};
 
-  struct adc_measurement adc_list[4];
+  struct adc_measurement adc_list[5];
   adc_list[0].ain = brd->ai.ia_fb;
   adc_list[1].ain = brd->ai.ib_fb;
   adc_list[2].ain = brd->ai.ic_fb;
-  adc_list[3].ain = enc;
+  adc_list[3].ain = enc_raw;
+  adc_list[4].ain = enc_q31;
 
   for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
     adc_list[i].min = 4096;
@@ -122,7 +126,9 @@ static void adc_test_read_callback(struct ush_object *self,
 
   uint32_t samples = 1;
   while (samples) {
+    encoder_update(&brd->hw.encoder);
     enc_data = encoder_read_count(&brd->hw.encoder);
+    angle_q31 = encoder_read_angle_q31(&brd->hw.encoder);
 
     uint8_t c = cli_usb_getc();
 
