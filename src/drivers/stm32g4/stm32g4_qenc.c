@@ -39,7 +39,8 @@ int qenc_init(qenc_t *self) {
       TIM_CCER_CC1E | TIM_CCER_CC2E; // Enable capture on both channels
   // Limit Range to 0
 
-  timer->ARR = self->cpr;
+  // timer->ARR = self->cpr;
+  timer->ARR = 0xFFFFFFFF;
 
   timer->CNT = 0;
 
@@ -67,7 +68,7 @@ void qenc_load(qenc_t *self, uint32_t count) {
   TIM_TypeDef *timer = (TIM_TypeDef *)self->timer;
   timer->CNT = count;
 }
-uint32_t qenc_read(qenc_t *self) {
+int32_t qenc_read(qenc_t *self) {
   if (self == NULL || self->timer == NULL) {
     return 0; // Error
   }
