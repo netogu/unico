@@ -2,6 +2,7 @@
 #include "bsp.h"
 #include "hal_encoder.h"
 #include "log.h"
+#include "stm32g4_pwm.h"
 #include "stm32g4_qenc.h"
 
 //------------------------------------------------------+

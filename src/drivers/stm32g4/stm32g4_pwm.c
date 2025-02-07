@@ -185,7 +185,8 @@ int pwm_init(pwm_t *self, uint32_t freq_hz, uint32_t dt_ns) {
 
     // Set PWM Mode to Center Aligned
     tim_regs->TIMxCR2 |= HRTIM_TIMCR2_UDM;
-    tim_regs->SETx1R = HRTIM_SET1R_CMP1;
+    // tim_regs->SETx1R = HRTIM_SET1R_CMP1;
+    tim_regs->RSTx1R = HRTIM_RST1R_CMP1;
     period = (SystemCoreClock / freq_hz * (32 >> prescale) + 1) / 2;
 
     tim_regs->PERxR = period;
@@ -205,7 +206,7 @@ int pwm_init(pwm_t *self, uint32_t freq_hz, uint32_t dt_ns) {
 
     // Configure PWM Output : Reset on match, Set on Period
 
-    tim_regs->RSTx2R = HRTIM_RST1R_CMP1;
+    // tim_regs->RSTx2R = HRTIM_RST1R_CMP1;
     // tim_regs->SETx2R = HRTIM_SET1R_CMP1;
 
     // Configure Deadtime
@@ -350,6 +351,7 @@ int pwm_enable_adc_trigger(pwm_t *self) {
   case PWM_HRTIM_TIM_A:
     // HRTIM1->sCommonRegs.CR1 = (1) << HRTIM_CR1_ADC1USRC_Pos;
     HRTIM1->sCommonRegs.ADC1R |= HRTIM_ADC1R_AD1TAPER;
+    // HRTIM1->sCommonRegs.ADC1R |= HRTIM_ADC1R_AD1TARST;
     break;
   case PWM_HRTIM_TIM_B:
     // HRTIM1->sCommonRegs.CR1 = (1) << HRTIM_CR1_ADC1USRC_Pos;
@@ -429,6 +431,7 @@ int pwm_3ph_set_frequency(pwm_3ph_t *self, uint32_t freq_hz) {
 
 int pwm_3ph_set_duty(pwm_3ph_t *self, float d1_u, float d2_u, float d3_u) {
 
+  // TODO: disable updates and renable after duty change
   pwm_set_duty(&self->pwma, d1_u);
   pwm_set_duty(&self->pwmb, d2_u);
   pwm_set_duty(&self->pwmc, d3_u);
