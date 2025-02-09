@@ -32,12 +32,12 @@ void encoder_set_offset(encoder_t *self, uint32_t offset) {
   self->ops.set_offset(offset);
 }
 int32_t encoder_read_angle_q31(encoder_t *self) {
-  int32_t angle_q31;
+  int32_t cpr = self->cpr;
   int32_t total_count = self->ops.read();
-  int32_t pos = (total_count % self->cpr);
-  // if (pos < 0) {
-  //   pos += self->cpr;
-  // }
-  angle_q31 = (int32_t)(((int64_t)pos * 0x7FFFFFFF) / self->cpr) >> 31;
+  int32_t pos = total_count % (cpr);
+
+  // Maping from [0, 2Pi] to [-Pi, Pi]
+  // normalized to [0, 2.0] and [-1.0, 1.0 - 2^(-31) ]
+  int32_t angle_q31 = (int64_t)pos * 2 * 0x80000000 / cpr - 0x40000000;
   return angle_q31;
 }
