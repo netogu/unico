@@ -215,6 +215,30 @@ int board_load_pinmap(board_t *brd) {
               .af = GPIO_AF3,
           },
 
+#if defined(BSP_MLB_revA)
+
+      .enc_a_pin =
+          (gpio_t){
+              .port = GPIO_PORT_D,
+              .pin = GPIO_PIN_3,
+              .mode = GPIO_MODE_ALTERNATE,
+              .af = GPIO_AF2,
+              .type = GPIO_TYPE_PUSH_PULL,
+              .speed = GPIO_SPEED_HIGH,
+          },
+
+      .enc_b_pin =
+          (gpio_t){
+              .port = GPIO_PORT_D,
+              .pin = GPIO_PIN_4,
+              .mode = GPIO_MODE_ALTERNATE,
+              .af = GPIO_AF2,
+              .type = GPIO_TYPE_PUSH_PULL,
+              .speed = GPIO_SPEED_HIGH,
+          },
+
+#elif defined(BSP_G4_NUKLEO)
+
       .enc_a_pin =
           (gpio_t){
               .port = GPIO_PORT_A,
@@ -234,6 +258,7 @@ int board_load_pinmap(board_t *brd) {
               .type = GPIO_TYPE_PUSH_PULL,
               .speed = GPIO_SPEED_HIGH,
           },
+#endif
 
   };
 

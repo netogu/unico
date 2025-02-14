@@ -4,6 +4,7 @@
 //--------------------------------------------------------------------+
 
 #include "bsp.h"
+#include "shell.h"
 #include "tasklist.h"
 
 static TaskHandle_t task_hmi_handle;

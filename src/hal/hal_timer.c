@@ -4,16 +4,15 @@
 #define HAL_TIMER_MAX_INSTANCES 2
 #define HAL_TIMER_INTERRUPT_PRIORITY 1
 
-
 typedef struct hal_timer_s {
-    TIM_TypeDef *TIM;
-    uint32_t period_us;
-    enum {
-        TIMER_STATE_UNINITIALIZED,
-        TIMER_STATE_STOPPED,
-        TIMER_STATE_RUNNING,
-    } state;
-    void (*on_timeout_cb)(void);
+  TIM_TypeDef *TIM;
+  uint32_t period_us;
+  enum {
+    TIMER_STATE_UNINITIALIZED,
+    TIMER_STATE_STOPPED,
+    TIMER_STATE_RUNNING,
+  } state;
+  void (*on_timeout_cb)(void);
 } hal_timer_t;
 
 static union {
@@ -24,25 +23,23 @@ static union {
   uint64_t cnt;
 } timer_us_ticks;
 
-static hal_timer_t timer_list[HAL_TIMER_MAX_INSTANCES] =
-{
-  {
-    .TIM = TIM6,
-    .period_us = 0,
-    .state = TIMER_STATE_UNINITIALIZED,
-    .on_timeout_cb = NULL,
-  },
-  {
-    .TIM = TIM7,
-    .period_us = 0,
-    .state = TIMER_STATE_UNINITIALIZED,
-    .on_timeout_cb = NULL,
-  }
-};
+static hal_timer_t timer_list[HAL_TIMER_MAX_INSTANCES] = {
+    {
+        .TIM = TIM6,
+        .period_us = 0,
+        .state = TIMER_STATE_UNINITIALIZED,
+        .on_timeout_cb = NULL,
+    },
+    {
+        .TIM = TIM7,
+        .period_us = 0,
+        .state = TIMER_STATE_UNINITIALIZED,
+        .on_timeout_cb = NULL,
+    }};
 
 static int _timer_stm32g4_init(hal_timer_t *self);
 
-hal_timer_t * timer_create(uint32_t period_us, void (*on_timeout_cb)(void)) {
+hal_timer_t *timer_create(uint32_t period_us, void (*on_timeout_cb)(void)) {
   // Create a new timer
 
   hal_timer_t *timer_handle = NULL;
@@ -63,9 +60,8 @@ hal_timer_t * timer_create(uint32_t period_us, void (*on_timeout_cb)(void)) {
       // No free timers
     }
   }
-  
-  return timer_handle;
 
+  return timer_handle;
 }
 
 static int _timer_stm32g4_init(hal_timer_t *self) {
@@ -90,13 +86,13 @@ static int _timer_stm32g4_init(hal_timer_t *self) {
   }
 
   // Set the prescaler to 1MHz
-  self->TIM->PSC = 170-1;
+  self->TIM->PSC = 170 - 1;
   // Set the period
   self->TIM->ARR = self->period_us;
 
   // Enable the timer interrupt
   self->TIM->DIER |= TIM_DIER_UIE;
-  
+
   return 0;
 }
 
@@ -117,35 +113,34 @@ void timer_us_init(void) {
 
   timer_us_ticks.cnt = 0;
 
-  // Configuring TIM2 as a 32-bit microsecond timer
+  // Configuring TIM as a 32-bit microsecond timer
 
-    // Enable TIM2 clock
-    RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;
+  // Enable TIM clock
+  RCC->APB1ENR1 |= RCC_APB1ENR1_TIM5EN;
 
-    // Set the prescaler to 1MHz
-    TIM2->PSC = 170-1;
-    // Set Period to max value
-    TIM2->ARR = 0xFFFFFFFF;
+  // Set the prescaler to 1MHz
+  TIM5->PSC = 170 - 1;
+  // Set Period to max value
+  TIM5->ARR = 0xFFFFFFFF;
 
-    // Enable Periodic Interrupt
-    TIM2->DIER |= TIM_DIER_UIE;
-    NVIC_EnableIRQ(TIM2_IRQn);
+  // Enable Periodic Interrupt
+  TIM5->DIER |= TIM_DIER_UIE;
+  NVIC_EnableIRQ(TIM5_IRQn);
 
-    // Enable the timer
-    TIM2->CR1 |= TIM_CR1_CEN;
+  // Enable the timer
+  TIM5->CR1 |= TIM_CR1_CEN;
 }
 
-
 uint64_t timer_us_get(void) {
-  // Get the TIM2 value
-  timer_us_ticks.low_u32 = TIM2->CNT;
+  // Get the TIM5 value
+  timer_us_ticks.low_u32 = TIM5->CNT;
   return timer_us_ticks.cnt;
 }
 
-// ISR for TIM2
-void TIM2_IRQHandler(void) {
+// ISR for TIM5
+void TIM5_IRQHandler(void) {
   // Clear the interrupt
-  TIM2->SR &= ~TIM_SR_UIF;
+  TIM5->SR &= ~TIM_SR_UIF;
   timer_us_ticks.high_u32++;
 }
 
