@@ -18,6 +18,8 @@ static adc_t adc5 = {.regs = ADC5};
 #define ADC_SAMPLE_247_5_CYCLES 0x7 // 247.5 ADC clock cycles
 #define ADC_SAMPLE_640_5_CYCLES 0x8 // 640.5 ADC clock cycles
 
+#define ADC_SCALE_12BIT 3.3 / 4096.0
+
 //------------------------------------------------------
 // OPAMP Config
 //------------------------------------------------------
@@ -146,7 +148,7 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "vm_fb",
               .channel = 1,
-              .scale = 1.0,
+              .scale = ADC_SCALE_12BIT * (1 / 43.2e-3),
               .offset = 0.0,
               .units = "V",
           },
@@ -212,7 +214,7 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "ia_fb",
               .channel = 1,
-              .scale = 1.0,
+              .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
               .units = "A",
           },
@@ -232,7 +234,7 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "ic_fb",
               .channel = 3,
-              .scale = 1.0,
+              .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
               .units = "A",
           },
@@ -252,7 +254,7 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "ib_fb",
               .channel = 3,
-              .scale = 1.0,
+              .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
               .units = "A",
           },

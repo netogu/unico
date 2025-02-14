@@ -10,6 +10,7 @@
 #include "hal_encoder.h"
 #include "tasklist.h"
 #include "taskmsg.h"
+#include <stdint.h>
 
 #define ANGLE_CORDIC                                                           \
   (int32_t)0x10000000               /* pi/8 in CORDIC input angle mapping */
@@ -83,78 +84,14 @@ TaskHandle_t task_pwm_control_init(void) {
   }
 }
 
-// static float fast_fmodf(float x, float y) {
-//   if (y == 0.0f) {
-//     return NAN; // Return NaN for undefined behavior
-//   }
-//
-//   // Calculate the integer multiple of y closest to x
-//   float quotient = (int)(x / y); // Cast to int truncates toward zero
-//   float result = x - quotient * y;
-//
-//   // Adjust result if it goes out of range due to truncation
-//   if (result < 0.0f && y > 0.0f) {
-//     result += y;
-//   } else if (result > 0.0f && y < 0.0f) {
-//     result += y;
-//   }
-//
-//   return result;
-// }
-
-static inline void task_pwmcon_notify(void) {
-  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-  vTaskNotifyGiveIndexedFromISR(task_pwm_control_handle, 0,
-                                &xHigherPriorityTaskWoken);
-  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-}
-
 static inline int pwmcon_foc_process_message(pwmcon_foc_t *foc,
                                              pwmcon_msg_t *msg) {
-
-  board_t *brd = board_get_handle();
 
   foc->fb.vbus =
       (float)(msg->vbus_mv + 1) / 1000.0f;   // Convert to volts from mV
   foc->dq0.vq = (float)msg->vq_mv / 1000.0f; // Convert to volts from mV
   foc->dq0.vd = (float)msg->vd_mv / 1000.0f; // Convert to volts from mV
   foc->_int.count_rate = msg->count_rate;
-
-  if (msg->mode == PWMCON_FOC_MODE_MANUAL) {
-    if (foc->_int.mode != PWMCON_FOC_MODE_MANUAL) {
-      // uint32_t count = foc->_int.count;
-      // count = (count * ENCODER_COUNTS_PER_REV) / 100000;
-      // brd->hw.encoder.load(count);
-      // foc->_int.count = count;
-      // foc->_int.mode = PWMCON_FOC_MODE_MANUAL;
-    }
-
-    // foc->fb.angle_norm_q31 = brd->encoder.read();
-    // foc->fb.angle_rad = (float) foc->fb.angle_norm_q31/1024.0f * 2*PI;
-  } else
-
-      if (msg->mode == PWMCON_FOC_MODE_OPEN_LOOP) {
-    if (foc->_int.mode != PWMCON_FOC_MODE_OPEN_LOOP) {
-      uint32_t count = foc->_int.count;
-      count = (count * 100000) / 1024;
-      foc->_int.count = count;
-      foc->_int.mode = PWMCON_FOC_MODE_OPEN_LOOP;
-    }
-    // foc->fb.angle_norm_q31 += msg->count_rate;
-    // foc->fb.angle_norm_q31 > 100000 ? foc->fb.angle_norm_q31 = 0 : 0;
-    // foc->fb.angle_rad = (float) foc->fb.angle_norm_q31/100000.0f * 2*PI;
-  } else if (msg->mode == PWMCON_FOC_MODE_FORCE_PWM) {
-    for (int i = 0; i < 3; i++) {
-      foc->pwm.duty[i] = (float)msg->duty_cmd[i] / 100.0f;
-    }
-    pwm_3ph_set_duty(&brd->hw.mcpwm, foc->pwm.duty[0], foc->pwm.duty[1],
-                     foc->pwm.duty[2]);
-    foc->_int.mode = PWMCON_FOC_MODE_FORCE_PWM;
-
-  } else {
-    cli_printf("FOC Message Error\r\n");
-    return -1;
-  }
 
   return 0;
 }
@@ -163,33 +100,7 @@ static void pwmcon_foc_update(pwmcon_foc_t *foc) {
   // Timer Callback
 
   board_t *brd = board_get_handle();
-  // gpio_pin_set(&brd->io.test_pin0);
-  // task_pwmcon_notify();
-  // // gpio_pin_clear(&brd->io.test_pin0);
 
-  // // Get Angle
-  // switch (foc->_int.mode) {
-  // case PWMCON_FOC_MODE_MANUAL:
-  //   // foc->_int.count = brd->hw.encoder.read();
-  //   foc->fb.angle_rad = (float)foc->_int.count / 1024.0f * 2 * PI;
-  //   break;
-  // case PWMCON_FOC_MODE_OPEN_LOOP:
-  //   foc->_int.count += foc->_int.count_rate;
-  //   if (foc->_int.count > 100000) {
-  //     foc->_int.count = 0;
-  //   }
-  //   foc->fb.angle_rad = (float)foc->_int.count / 100000.0f * 2 * PI;
-  //   break;
-  // case PWMCON_FOC_MODE_FORCE_PWM:
-  //   // No FOC needed
-  //   return;
-  //   break;
-  // default:
-  //   break;
-  // }
-
-  // float angle_rad_norm = fast_fmodf(foc->fb.angle_rad, 2.0f * PI) / (2.0f *
-  // PI); int32_t angle_rad_q31 = f32_to_q31(angle_rad_norm) << 1;
   int32_t angle_rad_q31 = encoder_read_angle_q31(&brd->hw.encoder);
 
   cordic_write(angle_rad_q31);
@@ -211,7 +122,8 @@ static void pwmcon_foc_update(pwmcon_foc_t *foc) {
   foc->abc.vphase[2] = -foc->abc.vphase[0] - foc->abc.vphase[1];
 
   for (int i = 0; i < 3; i++) {
-    foc->pwm.duty[i] = (foc->abc.vphase[i] + 1.0f) / 2.0f;
+    foc->pwm.duty[i] = (foc->abc.vphase[i] + 1.0f) /
+                       2.0f; // Map from (-1.0, 1.0) to (0.0, 1.0)
   }
 
   pwm_3ph_set_duty(&brd->hw.mcpwm, foc->pwm.duty[0], foc->pwm.duty[1],
@@ -249,13 +161,9 @@ static void task_pwm_control(void *parameters) {
     cli_printf("ERROR:\tTimer Failed to Start\r\n");
   }
 
-  foc.fb.vbus = 0.001;
+  foc.fb.vbus = 1.0;
 
   while (1) {
-
-    // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-    // ulTaskNotifyTakeIndexed(0, pdTRUE, portMAX_DELAY);
-    // gpio_pin_set(&brd->io.test_pin0);
 
     // Check for new messages
     if (task_pwmcon_msg_receive(&msg)) {
@@ -263,9 +171,7 @@ static void task_pwm_control(void *parameters) {
       pwmcon_foc_process_message(&foc, &msg);
       taskEXIT_CRITICAL();
     }
-    // task_pwmcon_timer_callback();
 
-    // gpio_pin_clear(&brd->io.test_pin0);
     vTaskDelay(TASK_DELAY_PWM_CONTROL);
   }
 }
