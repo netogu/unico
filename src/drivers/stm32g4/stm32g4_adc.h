@@ -44,5 +44,7 @@ int adc_start_regular_sampling(adc_t *self);
 int adc_start_injected_sampling(adc_t *self);
 int adc_stop_regular_sampling(adc_t *self);
 int adc_stop_injected_sampling(adc_t *self);
+uint32_t adc_read_raw(adc_input_t *self);
+float adc_read_value_f32(adc_input_t *self);
 
 #endif
