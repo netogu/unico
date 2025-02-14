@@ -1,7 +1,9 @@
 #include "shell.h"
 #include "bsp.h"
 #include "hal.h"
+#include "hal_encoder.h"
 #include "rtos.h"
+#include "stm32g474xx.h"
 #include "taskmsg.h"
 #include "tusb.h"
 
@@ -77,21 +79,23 @@ static const struct ush_descriptor ush_desc = {
 static void adc_test_read_callback(struct ush_object *self,
                                    struct ush_file_descriptor const *file,
                                    int argc, char *argv[]) {
-  (void)self;
   (void)file;
+  (void)self;
+  (void)argc;
+  (void)argv;
 
   // arguments count validation
-  if (argc != 2) {
-    // return predefined error message
-    ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
-    return;
-  }
-
-  int samples = atoi(argv[1]);
-  if (samples < 0 || samples > 5000) {
-    ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
-    return;
-  }
+  // if (argc != 2) {
+  //   // return predefined error message
+  //   ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+  //   return;
+  // }
+  //
+  // int samples = atoi(argv[1]);
+  // if (samples < 0 || samples > 500000) {
+  //   ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+  //   return;
+  // }
 
   board_t *brd = board_get_handle();
 
@@ -102,11 +106,17 @@ static void adc_test_read_callback(struct ush_object *self,
     uint32_t avg;
   };
 
-  struct adc_measurement adc_list[3];
+  uint32_t enc_data = 0;
+  int32_t angle_q31 = 0;
+  adc_input_t enc_raw = {.name = "enc", .data = &enc_data};
+  adc_input_t enc_q31 = {.name = "angle", .data = (uint32_t *)&angle_q31};
+
+  struct adc_measurement adc_list[5];
   adc_list[0].ain = brd->ai.ia_fb;
   adc_list[1].ain = brd->ai.ib_fb;
   adc_list[2].ain = brd->ai.ic_fb;
-  // adc_list[3].ain = brd->ai.temp_a;
+  adc_list[3].ain = enc_raw;
+  adc_list[4].ain = enc_q31;
 
   for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
     adc_list[i].min = 4096;
@@ -114,7 +124,21 @@ static void adc_test_read_callback(struct ush_object *self,
     adc_list[i].max = 0;
   }
 
-  for (int n = 0; n < samples; n++) {
+  uint32_t samples = 1;
+  while (samples) {
+    encoder_update(&brd->hw.encoder);
+    enc_data = encoder_read_count(&brd->hw.encoder);
+    angle_q31 = encoder_read_angle_q31(&brd->hw.encoder);
+
+    uint8_t c = cli_usb_getc();
+
+    if (c == 0x03) {
+      // Ctrl + C
+      break;
+    } else if (c == 'z') {
+      // zero encoder
+      encoder_set_offset(&brd->hw.encoder, 0);
+    }
 
     for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
       uint32_t value = *adc_list[i].ain.data;
@@ -127,16 +151,17 @@ static void adc_test_read_callback(struct ush_object *self,
     cli_printf("\n\r");
     tud_cdc_write_flush();
 
+    samples++;
     vTaskDelay(1);
   }
 
-  cli_printf("\n\r");
+  cli_printf("\n\rsamples: %ld\r\n", samples);
   for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
-    vTaskDelay(1);
     adc_list[i].avg = adc_list[i].avg / samples;
-    cli_printf("%s: min=%04d avg=%04d max=%04d\r\n", adc_list[i].ain.name,
+    cli_printf("%7s: min=%04d avg=%04d max=%04d\r\n", adc_list[i].ain.name,
                adc_list[i].min, adc_list[i].avg, adc_list[i].max);
     tud_cdc_write_flush();
+    vTaskDelay(1);
   }
 
   return;

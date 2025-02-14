@@ -5,7 +5,7 @@ File   : bsp.h
 
 #pragma once
 
-#include "encoder.h"
+#include "hal.h"
 #include "stm32g4.h"
 
 //------------------------------------------------------+

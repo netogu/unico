@@ -1,5 +1,6 @@
 #include "tasklist.h"
 #include "hal.h"
+#include "shell.h"
 
 //--------------------------------------------------------------------+
 // Task List
@@ -13,9 +14,6 @@ const task_descriptor_t task_list[] = {
     {.name = xstr(TASK_NAME_PWM_CONTROL),
      .init = task_pwm_control_init,
      .startup = true},
-    {.name = xstr(TASK_NAME_ADCMON),
-     .init = task_adcmon_init,
-     .startup = false},
 };
 
 //--------------------------------------------------------------------+

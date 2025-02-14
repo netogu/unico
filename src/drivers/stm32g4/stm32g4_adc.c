@@ -360,3 +360,10 @@ static int adc_configure_injected_input_sequence(adc_t *self) {
 
   return 0;
 }
+
+inline uint32_t adc_read_raw(adc_input_t *self) { return *self->data; }
+
+float adc_read_value_f32(adc_input_t *self) {
+  float value = *self->data * self->scale + self->offset;
+  return value;
+}

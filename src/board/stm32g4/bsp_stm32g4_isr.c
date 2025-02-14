@@ -18,6 +18,9 @@ struct global_isr_counter {
 
 void HRTIM1_TIMA_IRQHandler(void) {
 
+  // const float duty[2] = {0.2, 0.2};
+  // static uint8_t index = 0;
+
   /* REP Interrupt Routine - TIMA */
   if (HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxISR & HRTIM_TIMISR_REP) {
     // Disable continuous mode
@@ -28,10 +31,16 @@ void HRTIM1_TIMA_IRQHandler(void) {
 
   /* RESET Roll-Over Interupt */
   if (HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxISR & HRTIM_TIMISR_RST) {
-    board_t *brd = board_get_handle();
+    // board_t *brd = board_get_handle();
     // Togle test pin
-    gpio_pin_set(&brd->dio.test_pin0);
-    gpio_pin_clear(&brd->dio.test_pin0);
+    // gpio_pin_set(&brd->dio.test_pin0);
+    // gpio_pin_clear(&brd->dio.test_pin0);
+    // pwm_3ph_set_duty(&brd->hw.mcpwm, duty[index], duty[index], duty[index]);
+
+    // index++;
+    // if (index > 1) {
+    //   index = 0;
+    // }
     // Clear RST interrupt
     HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxICR |= HRTIM_TIMICR_RSTC;
   }
