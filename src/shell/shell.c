@@ -4,8 +4,10 @@
 #include "hal_encoder.h"
 #include "rtos.h"
 #include "stm32g474xx.h"
+#include "stm32g4_adc.h"
 #include "taskmsg.h"
 #include "tusb.h"
+#include "uclib.h"
 
 #define NOCHAR '\0'
 #define SHELL_HOSTNAME "board"
@@ -99,24 +101,30 @@ static void adc_test_read_callback(struct ush_object *self,
 
   board_t *brd = board_get_handle();
 
-  struct adc_measurement {
+  struct measurement {
     adc_input_t ain;
+    enum {
+      INT32,
+      F32,
+    } type;
     uint32_t min;
     uint32_t max;
     uint32_t avg;
   };
 
-  uint32_t enc_data = 0;
-  int32_t angle_q31 = 0;
-  adc_input_t enc_raw = {.name = "enc", .data = &enc_data};
-  adc_input_t enc_q31 = {.name = "angle", .data = (uint32_t *)&angle_q31};
+  // uint32_t enc_data = 0;
+  // int32_t angle_q31 = 0;
+  // adc_input_t enc_raw = {.name = "enc", .data = &enc_data};
+  // adc_input_t enc_q31 = {.name = "angle", .data = (uint32_t *)&angle_q31};
 
-  struct adc_measurement adc_list[5];
-  adc_list[0].ain = brd->ai.ia_fb;
-  adc_list[1].ain = brd->ai.ib_fb;
-  adc_list[2].ain = brd->ai.ic_fb;
-  adc_list[3].ain = enc_raw;
-  adc_list[4].ain = enc_q31;
+  struct measurement adc_list[5];
+  adc_list[0] = (struct measurement){.ain = brd->ai.ia_fb, .type = F32};
+  adc_list[1] = (struct measurement){.ain = brd->ai.ib_fb, .type = F32};
+  adc_list[2] = (struct measurement){.ain = brd->ai.ic_fb, .type = F32};
+  adc_list[3] = (struct measurement){.ain = brd->ai.vgd_mon, .type = F32};
+  adc_list[4] = (struct measurement){.ain = brd->ai.vm_fb, .type = F32};
+  // adc_list[3].ain = enc_raw;
+  // adc_list[4].ain = enc_q31;
 
   for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
     adc_list[i].min = 4096;
@@ -126,9 +134,9 @@ static void adc_test_read_callback(struct ush_object *self,
 
   uint32_t samples = 1;
   while (samples) {
-    encoder_update(&brd->hw.encoder);
-    enc_data = encoder_read_count(&brd->hw.encoder);
-    angle_q31 = encoder_read_angle_q31(&brd->hw.encoder);
+    // encoder_update(&brd->hw.encoder);
+    // enc_data = encoder_read_count(&brd->hw.encoder);
+    // angle_q31 = encoder_read_angle_q31(&brd->hw.encoder);
 
     uint8_t c = cli_usb_getc();
 
@@ -145,7 +153,16 @@ static void adc_test_read_callback(struct ush_object *self,
       adc_list[i].min = (value < adc_list[i].min) ? value : adc_list[i].min;
       adc_list[i].max = (value > adc_list[i].max) ? value : adc_list[i].max;
       adc_list[i].avg += value;
-      cli_printf("%s=%04d ", adc_list[i].ain.name, value);
+
+      if (adc_list[i].type == F32) {
+        char str_val[16];
+        float value_f32 = adc_read_value_f32(&adc_list[i].ain);
+        uclib_ftoa(value_f32, str_val, 2);
+        cli_printf("%s=%s%s ", adc_list[i].ain.name, str_val,
+                   adc_list[i].ain.units);
+      } else {
+        cli_printf("%s=%04d ", adc_list[i].ain.name, value);
+      }
     }
 
     cli_printf("\n\r");
@@ -158,8 +175,19 @@ static void adc_test_read_callback(struct ush_object *self,
   cli_printf("\n\rsamples: %ld\r\n", samples);
   for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
     adc_list[i].avg = adc_list[i].avg / samples;
-    cli_printf("%7s: min=%04d avg=%04d max=%04d\r\n", adc_list[i].ain.name,
-               adc_list[i].min, adc_list[i].avg, adc_list[i].max);
+
+    if (adc_list[i].type == F32) {
+      // char *str_min[16];
+      // char *str_max[16];
+      // char *str_avg[16];
+      // uclib_ftoa(adc_list[], char *s, int decimal_places)
+      cli_printf("%7s: min=%04d avg=%04d max=%04d\r\n", adc_list[i].ain.name,
+                 adc_list[i].min, adc_list[i].avg, adc_list[i].max);
+
+    } else {
+      cli_printf("%7s: min=%04d avg=%04d max=%04d\r\n", adc_list[i].ain.name,
+                 adc_list[i].min, adc_list[i].avg, adc_list[i].max);
+    }
     tud_cdc_write_flush();
     vTaskDelay(1);
   }
