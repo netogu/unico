@@ -42,7 +42,7 @@ C_SOURCES += $(wildcard src/tasks/*.c)
 C_SOURCES += $(wildcard src/drivers/*.c) 
 C_SOURCES += $(wildcard src/drivers/stm32g4/*.c) 
 C_SOURCES += $(wildcard src/drivers/power/*.c) 
-C_SOURCES += $(wildcard src/lib/unilib/*.c)
+C_SOURCES += $(wildcard src/lib/*.c)
 C_SOURCES += $(wildcard $(TINYPRINTF)/*.c)
 C_SOURCES += $(wildcard $(TINYUSB)/tusb.c)
 C_SOURCES += $(wildcard $(TINYUSB)/common/*.c)
@@ -77,7 +77,7 @@ C_INCLUDES =  \
 -Isrc/hal \
 -Isrc/rtos \
 -Isrc/tasks \
--Isrc/lib/unilib \
+-Isrc/lib \
 -Isrc/external/CMSIS/Device/ST/STM32G4xx/Include \
 -Isrc/external/CMSIS/Include \
 -Isrc/external/CMSIS-DSP/Include \

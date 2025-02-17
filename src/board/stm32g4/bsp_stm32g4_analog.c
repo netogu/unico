@@ -139,34 +139,34 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "vbatt_mon",
               .channel = 1,
-              .scale = 1.0,
+              .scale = ADC_SCALE_12BIT * (1 / 43.2e-3),
               .offset = 0.0,
               .units = "V",
           },
 
       .vm_fb =
           (adc_input_t){
-              .name = "vm_fb",
-              .channel = 1,
-              .scale = ADC_SCALE_12BIT * (1 / 43.2e-3),
+              .name = "vm",
+              .channel = 13,
+              .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
               .units = "V",
           },
 
       .vgd_mon =
           (adc_input_t){
-              .name = "vgd_mon",
-              .channel = 1,
-              .scale = 1.0,
+              .name = "vgd",
+              .channel = 3,
+              .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
               .units = "V",
           },
 
       .im_fb =
           (adc_input_t){
-              .name = "im_fb",
+              .name = "im",
               .channel = 9,
-              .scale = 1.0,
+              .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
               .units = "A",
           },
@@ -177,7 +177,7 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "temp_a",
               .channel = 6,
-              .scale = 1.0,
+              .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
               .units = "C",
           },
@@ -186,7 +186,7 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "temp_b",
               .channel = 7,
-              .scale = 1.0,
+              .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
               .units = "C",
           },
@@ -194,7 +194,7 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "temp_c",
               .channel = 8,
-              .scale = 1.0,
+              .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
               .units = "C",
           },
@@ -203,7 +203,7 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "temp_a",
               .channel = 5,
-              .scale = 1.0,
+              .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
               .units = "C",
           },
@@ -212,7 +212,7 @@ void board_adc_setup(void) {
 
       .ia_fb =
           (adc_input_t){
-              .name = "ia_fb",
+              .name = "ia",
               .channel = 1,
               .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
@@ -221,7 +221,7 @@ void board_adc_setup(void) {
 
       .va_fb =
           (adc_input_t){
-              .name = "va_fb",
+              .name = "va",
               .channel = 2,
               .scale = 1.0,
               .offset = 0.0,
@@ -232,7 +232,7 @@ void board_adc_setup(void) {
 
       .ic_fb =
           (adc_input_t){
-              .name = "ic_fb",
+              .name = "ic",
               .channel = 3,
               .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
@@ -241,7 +241,7 @@ void board_adc_setup(void) {
 
       .vb_fb =
           (adc_input_t){
-              .name = "vb_fb",
+              .name = "vb",
               .channel = 15,
               .scale = 1.0,
               .offset = 0.0,
@@ -252,7 +252,7 @@ void board_adc_setup(void) {
 
       .ib_fb =
           (adc_input_t){
-              .name = "ic_fb",
+              .name = "ic",
               .channel = 3,
               .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
@@ -261,7 +261,7 @@ void board_adc_setup(void) {
 
       .vc_fb =
           (adc_input_t){
-              .name = "vc_fb",
+              .name = "vc",
               .channel = 6,
               .scale = 1.0,
               .offset = 0.0,
@@ -278,10 +278,11 @@ void board_adc_setup(void) {
 
   // TODO: Configure comparators
 
-  adc_register_input(&adc1, &brd->ai.vbatt_mon, 'r', ADC_SAMPLE_247_5_CYCLES);
-  adc_register_input(&adc1, &brd->ai.vm_fb, 'i', ADC_SAMPLE_247_5_CYCLES);
-  adc_register_input(&adc1, &brd->ai.vgd_mon, 'i', ADC_SAMPLE_247_5_CYCLES);
-  adc_register_input(&adc1, &brd->ai.im_fb, 'i', ADC_SAMPLE_247_5_CYCLES);
+  // adc_register_input(&adc1, &brd->ai.vbatt_mon, 'r',
+  // ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc1, &brd->ai.vm_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
+  adc_register_input(&adc1, &brd->ai.vgd_mon, 'i', ADC_SAMPLE_2_5_CYCLES);
+  adc_register_input(&adc1, &brd->ai.im_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
 
   adc_register_input(&adc2, &brd->ai.temp_a, 'i', ADC_SAMPLE_247_5_CYCLES);
   adc_register_input(&adc2, &brd->ai.temp_b, 'i', ADC_SAMPLE_247_5_CYCLES);
@@ -338,13 +339,22 @@ void board_adc_setup(void) {
     NVIC_EnableIRQ(ADC3_IRQn);
   }
 
-  adc_start_regular_sampling(&adc1);
-  adc_start_regular_sampling(&adc2);
+  // adc_start_regular_sampling(&adc1);
+  // adc_start_regular_sampling(&adc2);
   adc_start_injected_sampling(&adc1);
   adc_start_injected_sampling(&adc2);
   adc_start_injected_sampling(&adc3);
   adc_start_injected_sampling(&adc4);
   adc_start_injected_sampling(&adc5);
+}
+
+void ADC1_IRQHandler(void) {
+  if (ADC1->ISR & ADC_ISR_JEOS) {
+    board_t *brd = board_get_handle();
+    gpio_pin_set(&brd->dio.test_pin0);
+    gpio_pin_clear(&brd->dio.test_pin0);
+    ADC1->ISR |= ADC_ISR_JEOS;
+  }
 }
 
 void ADC3_IRQHandler(void) {
