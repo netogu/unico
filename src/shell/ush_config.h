@@ -32,13 +32,13 @@ extern "C" {
 #define USH_CONFIG_FILENAME_ALIGN_SPACE                         16
 #define USH_CONFIG_CMD_XXD_COLUMNS                              8
 
-#define USH_CONFIG_ENABLE_COMMAND_CAT                           1
-#define USH_CONFIG_ENABLE_COMMAND_CD                            1
-#define USH_CONFIG_ENABLE_COMMAND_ECHO                          1
+#define USH_CONFIG_ENABLE_COMMAND_CAT                           0
+#define USH_CONFIG_ENABLE_COMMAND_CD                            0
+#define USH_CONFIG_ENABLE_COMMAND_ECHO                          0
 #define USH_CONFIG_ENABLE_COMMAND_HELP                          1
 #define USH_CONFIG_ENABLE_COMMAND_LS                            1
 #define USH_CONFIG_ENABLE_COMMAND_PWD                           1
-#define USH_CONFIG_ENABLE_COMMAND_XXD                           1
+#define USH_CONFIG_ENABLE_COMMAND_XXD                           0
 
 #define USH_CONFIG_ENABLE_FEATURE_COMMANDS                      1
 #define USH_CONFIG_ENABLE_FEATURE_AUTOCOMPLETE                  1

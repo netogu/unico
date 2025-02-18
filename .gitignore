@@ -42,3 +42,7 @@ build
 
 # External/tinyusb
 src/external/tinyusb
+compile_commands.json
+src/.DS_Store
+src/external/.DS_Store
+src/external/CMSIS/.DS_Store
