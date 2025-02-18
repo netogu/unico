@@ -90,6 +90,7 @@ typedef struct board_s {
 
     adc_input_t vbatt_mon;
     adc_input_t vgd_mon;
+    adc_input_t vl_mon;
     adc_input_t temp_a;
     adc_input_t temp_b;
     adc_input_t temp_c;

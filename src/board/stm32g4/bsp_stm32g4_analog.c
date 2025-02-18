@@ -18,7 +18,7 @@ static adc_t adc5 = {.regs = ADC5};
 #define ADC_SAMPLE_247_5_CYCLES 0x7 // 247.5 ADC clock cycles
 #define ADC_SAMPLE_640_5_CYCLES 0x8 // 640.5 ADC clock cycles
 
-#define ADC_SCALE_12BIT 3.3 / 4096.0
+#define ADC_SCALE_12BIT 3.3f / 4096.0f
 
 //------------------------------------------------------
 // OPAMP Config
@@ -113,6 +113,10 @@ void board_adc_setup(void) {
        .pin = GPIO_PIN_4,
        .mode = GPIO_MODE_ANALOG}, // TEMP_M - ADC2_5
 
+      {.port = GPIO_PORT_C,
+       .pin = GPIO_PIN_5,
+       .mode = GPIO_MODE_ANALOG}, // VL_MON - ADC2_11
+
       {.port = GPIO_PORT_E,
        .pin = GPIO_PIN_7,
        .mode = GPIO_MODE_ANALOG}, // VM_FB (OVLO) - COMP4_VINP
@@ -137,9 +141,9 @@ void board_adc_setup(void) {
 
       .vbatt_mon =
           (adc_input_t){
-              .name = "vbatt_mon",
+              .name = "vbat",
               .channel = 1,
-              .scale = ADC_SCALE_12BIT * (1 / 43.2e-3),
+              .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
               .units = "V",
           },
@@ -157,15 +161,24 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "vgd",
               .channel = 3,
-              .scale = ADC_SCALE_12BIT,
-              .offset = 0.0,
+              .scale = ADC_SCALE_12BIT * 1.945525292f,
+              .offset = -0.2237354086f,
+              .units = "V",
+          },
+
+      .vl_mon =
+          (adc_input_t){
+              .name = "vl",
+              .channel = 11,
+              .scale = ADC_SCALE_12BIT * 15.31399397f,
+              .offset = -14.75467388,
               .units = "V",
           },
 
       .im_fb =
           (adc_input_t){
               .name = "im",
-              .channel = 9,
+              .channel = 4,
               .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
               .units = "A",
@@ -175,7 +188,7 @@ void board_adc_setup(void) {
 
       .temp_a =
           (adc_input_t){
-              .name = "temp_a",
+              .name = "ta",
               .channel = 6,
               .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
@@ -184,7 +197,7 @@ void board_adc_setup(void) {
 
       .temp_b =
           (adc_input_t){
-              .name = "temp_b",
+              .name = "tb",
               .channel = 7,
               .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
@@ -192,7 +205,7 @@ void board_adc_setup(void) {
           },
       .temp_c =
           (adc_input_t){
-              .name = "temp_c",
+              .name = "tc",
               .channel = 8,
               .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
@@ -201,7 +214,7 @@ void board_adc_setup(void) {
 
       .temp_m =
           (adc_input_t){
-              .name = "temp_a",
+              .name = "tm",
               .channel = 5,
               .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
@@ -252,7 +265,7 @@ void board_adc_setup(void) {
 
       .ib_fb =
           (adc_input_t){
-              .name = "ic",
+              .name = "ib",
               .channel = 3,
               .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
@@ -280,14 +293,17 @@ void board_adc_setup(void) {
 
   // adc_register_input(&adc1, &brd->ai.vbatt_mon, 'r',
   // ADC_SAMPLE_247_5_CYCLES);
-  adc_register_input(&adc1, &brd->ai.vm_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
-  adc_register_input(&adc1, &brd->ai.vgd_mon, 'i', ADC_SAMPLE_2_5_CYCLES);
+  adc_register_input(&adc1, &brd->ai.vgd_mon, 'i', ADC_SAMPLE_92_5_CYCLES);
+  adc_register_input(&adc1, &brd->ai.vm_fb, 'i', ADC_SAMPLE_92_5_CYCLES);
   adc_register_input(&adc1, &brd->ai.im_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
+  adc_register_input(&adc1, &brd->ai.vbatt_mon, 'i', ADC_SAMPLE_2_5_CYCLES);
 
-  adc_register_input(&adc2, &brd->ai.temp_a, 'i', ADC_SAMPLE_247_5_CYCLES);
+  // adc_register_input(&adc2, &brd->ai.vl_mon, 'r', ADC_SAMPLE_247_5_CYCLES);
   adc_register_input(&adc2, &brd->ai.temp_b, 'i', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc2, &brd->ai.temp_a, 'i', ADC_SAMPLE_247_5_CYCLES);
   adc_register_input(&adc2, &brd->ai.temp_c, 'i', ADC_SAMPLE_247_5_CYCLES);
-  adc_register_input(&adc2, &brd->ai.temp_m, 'i', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc2, &brd->ai.vl_mon, 'i', ADC_SAMPLE_247_5_CYCLES);
+  // adc_register_input(&adc2, &brd->ai.temp_m, 'i', ADC_SAMPLE_247_5_CYCLES);
 
   adc_register_input(&adc3, &brd->ai.ia_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
   adc_register_input(&adc3, &brd->ai.va_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
