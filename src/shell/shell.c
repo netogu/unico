@@ -77,6 +77,23 @@ static const struct ush_descriptor ush_desc = {
     .hostname = SHELL_HOSTNAME,                // hostname (in prompt)
 };
 
+// pint ADC helper functions
+
+struct measurement {
+  adc_input_t ain;
+  enum {
+    INT32,
+    F32,
+  } type;
+  uint32_t min;
+  uint32_t max;
+  uint32_t avg;
+};
+
+float adc_test_scale_meas_f32(uint32_t value_raw,
+                              const struct measurement *meas) {
+  return (float)value_raw * meas->ain.scale + meas->ain.offset;
+}
 // print ADC Callback
 static void adc_test_read_callback(struct ush_object *self,
                                    struct ush_file_descriptor const *file,
@@ -101,28 +118,23 @@ static void adc_test_read_callback(struct ush_object *self,
 
   board_t *brd = board_get_handle();
 
-  struct measurement {
-    adc_input_t ain;
-    enum {
-      INT32,
-      F32,
-    } type;
-    uint32_t min;
-    uint32_t max;
-    uint32_t avg;
-  };
-
   // uint32_t enc_data = 0;
   // int32_t angle_q31 = 0;
   // adc_input_t enc_raw = {.name = "enc", .data = &enc_data};
   // adc_input_t enc_q31 = {.name = "angle", .data = (uint32_t *)&angle_q31};
 
-  struct measurement adc_list[5];
+  struct measurement adc_list[11];
   adc_list[0] = (struct measurement){.ain = brd->ai.ia_fb, .type = F32};
   adc_list[1] = (struct measurement){.ain = brd->ai.ib_fb, .type = F32};
   adc_list[2] = (struct measurement){.ain = brd->ai.ic_fb, .type = F32};
   adc_list[3] = (struct measurement){.ain = brd->ai.vgd_mon, .type = F32};
-  adc_list[4] = (struct measurement){.ain = brd->ai.vm_fb, .type = F32};
+  adc_list[4] = (struct measurement){.ain = brd->ai.vl_mon, .type = F32};
+  adc_list[5] = (struct measurement){.ain = brd->ai.vbatt_mon, .type = F32};
+  adc_list[6] = (struct measurement){.ain = brd->ai.vm_fb, .type = F32};
+  adc_list[7] = (struct measurement){.ain = brd->ai.im_fb, .type = F32};
+  adc_list[8] = (struct measurement){.ain = brd->ai.temp_a, .type = F32};
+  adc_list[9] = (struct measurement){.ain = brd->ai.temp_b, .type = F32};
+  adc_list[10] = (struct measurement){.ain = brd->ai.temp_c, .type = F32};
   // adc_list[3].ain = enc_raw;
   // adc_list[4].ain = enc_q31;
 
@@ -165,8 +177,8 @@ static void adc_test_read_callback(struct ush_object *self,
       }
     }
 
-    cli_printf("\n\r");
     tud_cdc_write_flush();
+    cli_printf("\n\r");
 
     samples++;
     vTaskDelay(1);
@@ -177,16 +189,24 @@ static void adc_test_read_callback(struct ush_object *self,
     adc_list[i].avg = adc_list[i].avg / samples;
 
     if (adc_list[i].type == F32) {
-      // char *str_min[16];
-      // char *str_max[16];
-      // char *str_avg[16];
-      // uclib_ftoa(adc_list[], char *s, int decimal_places)
-      cli_printf("%7s: min=%04d avg=%04d max=%04d\r\n", adc_list[i].ain.name,
-                 adc_list[i].min, adc_list[i].avg, adc_list[i].max);
+      char str_min[16];
+      char str_max[16];
+      char str_avg[16];
+      float min_f32 = adc_test_scale_meas_f32(adc_list[i].min, &adc_list[i]);
+      float max_f32 = adc_test_scale_meas_f32(adc_list[i].max, &adc_list[i]);
+      float avg_f32 = adc_test_scale_meas_f32(adc_list[i].avg, &adc_list[i]);
+
+      uclib_ftoa(min_f32, str_min, 2);
+      uclib_ftoa(max_f32, str_max, 2);
+      uclib_ftoa(avg_f32, str_avg, 2);
+
+      cli_printf("%7s[%s]: min=%s avg=%s max=%s\r\n", adc_list[i].ain.name,
+                 adc_list[i].ain.units, str_min, str_avg, str_max);
 
     } else {
-      cli_printf("%7s: min=%04d avg=%04d max=%04d\r\n", adc_list[i].ain.name,
-                 adc_list[i].min, adc_list[i].avg, adc_list[i].max);
+      cli_printf("%7s[raw]: min=%04d avg=%04d max=%04d\r\n",
+                 adc_list[i].ain.name, adc_list[i].min, adc_list[i].avg,
+                 adc_list[i].max);
     }
     tud_cdc_write_flush();
     vTaskDelay(1);

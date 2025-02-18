@@ -349,8 +349,9 @@ int pwm_enable_adc_trigger(pwm_t *self) {
 
   switch (pwm_channel) {
   case PWM_HRTIM_TIM_A:
-    // HRTIM1->sCommonRegs.CR1 = (1) << HRTIM_CR1_ADC1USRC_Pos;
-    HRTIM1->sCommonRegs.ADC1R |= HRTIM_ADC1R_AD1TAPER;
+    HRTIM1->sCommonRegs.CR1 &= ~(HRTIM_CR1_ADC1USRC_Msk);
+    HRTIM1->sCommonRegs.CR1 |= (1) << HRTIM_CR1_ADC1USRC_Pos;
+    HRTIM1->sCommonRegs.ADC2R |= HRTIM_ADC2R_AD2TAPER;
     // HRTIM1->sCommonRegs.ADC1R |= HRTIM_ADC1R_AD1TARST;
     break;
   case PWM_HRTIM_TIM_B:
