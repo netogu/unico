@@ -84,6 +84,7 @@ struct measurement {
   enum {
     INT32,
     F32,
+    Q31,
   } type;
   uint32_t min;
   uint32_t max;
@@ -118,12 +119,13 @@ static void adc_test_read_callback(struct ush_object *self,
 
   board_t *brd = board_get_handle();
 
-  // uint32_t enc_data = 0;
-  // int32_t angle_q31 = 0;
-  // adc_input_t enc_raw = {.name = "enc", .data = &enc_data};
-  // adc_input_t enc_q31 = {.name = "angle", .data = (uint32_t *)&angle_q31};
+  uint32_t enc_data = 0;
+  int32_t angle_q31 = 0;
+  adc_input_t enc_raw = {.name = "enc", .data = &enc_data};
+  adc_input_t angle = {
+      .name = "angle", .data = (uint32_t *)&angle_q31, .units = "rad"};
 
-  struct measurement adc_list[11];
+  struct measurement adc_list[13];
   adc_list[0] = (struct measurement){.ain = brd->ai.ia_fb, .type = F32};
   adc_list[1] = (struct measurement){.ain = brd->ai.ib_fb, .type = F32};
   adc_list[2] = (struct measurement){.ain = brd->ai.ic_fb, .type = F32};
@@ -135,8 +137,8 @@ static void adc_test_read_callback(struct ush_object *self,
   adc_list[8] = (struct measurement){.ain = brd->ai.temp_a, .type = F32};
   adc_list[9] = (struct measurement){.ain = brd->ai.temp_b, .type = F32};
   adc_list[10] = (struct measurement){.ain = brd->ai.temp_c, .type = F32};
-  // adc_list[3].ain = enc_raw;
-  // adc_list[4].ain = enc_q31;
+  adc_list[11] = (struct measurement){.ain = enc_raw, .type = INT32};
+  adc_list[12] = (struct measurement){.ain = angle, .type = Q31};
 
   for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
     adc_list[i].min = 4096;
@@ -146,9 +148,9 @@ static void adc_test_read_callback(struct ush_object *self,
 
   uint32_t samples = 1;
   while (samples) {
-    // encoder_update(&brd->hw.encoder);
-    // enc_data = encoder_read_count(&brd->hw.encoder);
-    // angle_q31 = encoder_read_angle_q31(&brd->hw.encoder);
+    encoder_update(&brd->hw.encoder);
+    enc_data = encoder_read_count(&brd->hw.encoder);
+    angle_q31 = encoder_read_angle_q31(&brd->hw.encoder);
 
     uint8_t c = cli_usb_getc();
 
@@ -172,6 +174,14 @@ static void adc_test_read_callback(struct ush_object *self,
         uclib_ftoa(value_f32, str_val, 2);
         cli_printf("%s=%s%s ", adc_list[i].ain.name, str_val,
                    adc_list[i].ain.units);
+      } else if (adc_list[i].type == Q31) {
+
+        char str_val[16];
+        float value_f32 = q31_to_f32((int32_t)*adc_list[i].ain.data);
+        uclib_ftoa(value_f32, str_val, 4);
+        cli_printf("%s=%s%s ", adc_list[i].ain.name, str_val,
+                   adc_list[i].ain.units);
+
       } else {
         cli_printf("%s=%04d ", adc_list[i].ain.name, value);
       }
@@ -355,8 +365,6 @@ static void dpt_exec_callback(struct ush_object *self,
 static void _print_pwmcon_msg(struct ush_object *self, pwmcon_msg_t *msg) {
   ush_printf(self, "vq = %d mV\n\r", msg->vq_mv);
   ush_printf(self, "vd = %d mV\n\r", msg->vd_mv);
-  ush_printf(self, "vbus = %d mV\n\r", msg->vbus_mv);
-  ush_printf(self, "count_rate = %d\n\r", msg->count_rate);
   ush_printf(self, "mode = %d\n\r", msg->mode);
 }
 // PWMA Set Duty Callback
@@ -387,43 +395,18 @@ static void foc_cmd_cb(struct ush_object *self,
   bool msg_updated = false;
   while (current_arg < argc) {
     if (strcmp(argv[current_arg], "vq") == 0) {
-      uint32_t vq = atoi(argv[current_arg + 1]);
+      int32_t vq = atoi(argv[current_arg + 1]);
       msg.vq_mv = vq;
       msg_updated = true;
       current_arg += 2;
     } else if (strcmp(argv[current_arg], "vd") == 0) {
-      uint32_t vd = atoi(argv[current_arg + 1]);
+      int32_t vd = atoi(argv[current_arg + 1]);
       msg.vd_mv = vd;
-      msg_updated = true;
-      current_arg += 2;
-    } else if (strcmp(argv[current_arg], "vbus") == 0) {
-      uint32_t vbus = atoi(argv[current_arg + 1]);
-      msg.vbus_mv = vbus;
-      msg_updated = true;
-      current_arg += 2;
-    } else if (strcmp(argv[current_arg], "count_rate") == 0) {
-      uint32_t count_rate = atoi(argv[current_arg + 1]);
-      msg.count_rate = count_rate;
       msg_updated = true;
       current_arg += 2;
     } else if (strcmp(argv[current_arg], "mode") == 0) {
       msg.mode = atoi(argv[current_arg + 1]);
       msg_updated = true;
-      current_arg += 2;
-    } else if (strcmp(argv[current_arg], "pwma") == 0) {
-      msg.duty_cmd[0] = atoi(argv[current_arg + 1]);
-      msg_updated = true;
-      msg.mode = 2; // PWMCON_FOC_FORCE_PWM
-      current_arg += 2;
-    } else if (strcmp(argv[current_arg], "pwmb") == 0) {
-      msg.duty_cmd[1] = atoi(argv[current_arg + 1]);
-      msg_updated = true;
-      msg.mode = 2; // PWMCON_FOC_FORCE_PWM
-      current_arg += 2;
-    } else if (strcmp(argv[current_arg], "pwmc") == 0) {
-      msg.duty_cmd[2] = atoi(argv[current_arg + 1]);
-      msg_updated = true;
-      msg.mode = 2; // PWMCON_FOC_FORCE_PWM
       current_arg += 2;
     } else {
       ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);

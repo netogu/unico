@@ -5,6 +5,7 @@
 
 #include "stm32g4_qenc.h"
 #include "stm32g4.h"
+#include "stm32g474xx.h"
 
 int qenc_init(qenc_t *self) {
   if (self == NULL || self->timer == NULL) {
@@ -21,7 +22,10 @@ int qenc_init(qenc_t *self) {
   }
 
   // Select TI1 and TI2 Source to TI1|2 as Inputs
+  timer->CCMR1 = 0;
   timer->CCMR1 |= TIM_CCMR1_CC1S_0 | TIM_CCMR1_CC2S_0;
+  timer->CCMR1 |=
+      0b1111 << TIM_CCMR1_IC1F_Pos | 0b1111 << TIM_CCMR1_CC2S_Pos; // Filtering
 
   // Set edge polarity in CCER - No filter
   //  CC1P & CC1NP = 0  : Non-Inverted Rising-Edge
@@ -32,6 +36,8 @@ int qenc_init(qenc_t *self) {
   // Initialize TIM - Slave mode selection
   timer->SMCR &= ~TIM_SMCR_SMS_Msk;
   timer->SMCR |= TIM_SMCR_SMS_1 | TIM_SMCR_SMS_0;
+  // timer->SMCR |=
+  //     TIM_SMCR_ETF_3 | TIM_SMCR_ETF_2 | TIM_SMCR_ETF_1 | TIM_SMCR_ETF_0;
   // timer->SMCR |= 0b1111 << TIM_SMCR_SMS_Pos;
 
   timer->PSC = 0;
