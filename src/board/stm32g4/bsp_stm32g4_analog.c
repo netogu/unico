@@ -143,8 +143,8 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "vbat",
               .channel = 1,
-              .scale = ADC_SCALE_12BIT,
-              .offset = 0.0,
+              .scale = ADC_SCALE_12BIT * 23.3881f,
+              .offset = 9.45841036e-3f,
               .units = "V",
           },
 
@@ -152,8 +152,8 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "vm",
               .channel = 13,
-              .scale = ADC_SCALE_12BIT,
-              .offset = 0.0,
+              .scale = ADC_SCALE_12BIT * 23.3881f,
+              .offset = 9.45841036e-3f,
               .units = "V",
           },
 
@@ -227,8 +227,8 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "ia",
               .channel = 1,
-              .scale = ADC_SCALE_12BIT,
-              .offset = 0.0,
+              .scale = ADC_SCALE_12BIT / (0.001f * 20.0f),
+              .offset = 0.0f,
               .units = "A",
           },
 
@@ -247,8 +247,8 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "ic",
               .channel = 3,
-              .scale = ADC_SCALE_12BIT,
-              .offset = 0.0,
+              .scale = ADC_SCALE_12BIT / (0.001f * 20.0f),
+              .offset = 0.0f,
               .units = "A",
           },
 
@@ -256,7 +256,7 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "vb",
               .channel = 15,
-              .scale = 1.0,
+              .scale = ADC_SCALE_12BIT,
               .offset = 0.0,
               .units = "V",
           },
@@ -267,8 +267,8 @@ void board_adc_setup(void) {
           (adc_input_t){
               .name = "ib",
               .channel = 3,
-              .scale = ADC_SCALE_12BIT,
-              .offset = 0.0,
+              .scale = ADC_SCALE_12BIT / (0.001f * 20.0f),
+              .offset = 0.0f,
               .units = "A",
           },
 

@@ -52,8 +52,8 @@ void board_pwm_setup(void) {
           .mode = PWM_3PHASE_MODE_6PWM,
       },
 
-  printf(timestamp());
-  if (pwm_3ph_init(&brd->hw.mcpwm, 50000, 200) != 0) {
+  printf("%s", timestamp());
+  if (pwm_3ph_init(&brd->hw.mcpwm, 50000, 100) != 0) {
     LOG_FAIL("PWM");
   } else {
     LOG_OK("PWM");
@@ -134,7 +134,7 @@ __attribute__((unused)) static void board_gate_driver_setup(void) {
 static qenc_t menc_abz = (qenc_t){
     .timer = TIM2,
     .mode = QENC_MODE_ABZ,
-    .cpr = 400,
+    .cpr = 2500,
 };
 
 uint32_t menc_read(void) { return qenc_read(&menc_abz); }
