@@ -1,6 +1,6 @@
 #include "bsp.h"
 #include "dsp/controller_functions.h"
-#include "moc.h"
+#include "motor_control.h"
 #include <stdint.h>
 
 void moc_foc_update(moc_foc_t *self) {

@@ -88,28 +88,28 @@ typedef struct board_s {
 
   struct board_ai_s {
 
-    adc_input_t vbatt_mon;
-    adc_input_t vgd_mon;
-    adc_input_t vl_mon;
-    adc_input_t temp_a;
-    adc_input_t temp_b;
-    adc_input_t temp_c;
-    adc_input_t temp_m;
+    hal_analog_input_t vbatt_mon;
+    hal_analog_input_t vgd_mon;
+    hal_analog_input_t vl_mon;
+    hal_analog_input_t temp_a;
+    hal_analog_input_t temp_b;
+    hal_analog_input_t temp_c;
+    hal_analog_input_t temp_m;
 
-    adc_input_t vm_fb;
-    adc_input_t va_fb;
-    adc_input_t vb_fb;
-    adc_input_t vc_fb;
-    adc_input_t im_fb;
-    adc_input_t ia_fb;
-    adc_input_t ib_fb;
-    adc_input_t ic_fb;
+    hal_analog_input_t vm_fb;
+    hal_analog_input_t va_fb;
+    hal_analog_input_t vb_fb;
+    hal_analog_input_t vc_fb;
+    hal_analog_input_t im_fb;
+    hal_analog_input_t ia_fb;
+    hal_analog_input_t ib_fb;
+    hal_analog_input_t ic_fb;
 
   } ai;
 
   struct board_hw_t {
     pwm_3ph_t mcpwm;
-    encoder_t encoder;
+    hal_encoder_t encoder;
   } hw;
 
   struct board_com_t {

@@ -5,7 +5,7 @@
 //--------------------------------------------------------------------+
 #include "bsp.h"
 #include "hal.h"
-#include "lib/moc.h"
+#include "lib/motor_control.h"
 #include "stm32g4_adc.h"
 #include "tasklist.h"
 #include "taskmsg.h"
@@ -49,11 +49,11 @@ static void task_pwmcon_timer_callback() {
   // Timer Callback
   board_t *brd = board_get_handle();
   // Read Feedback
-  foc.rotor_angle_q31 = encoder_read_angle_q31(&brd->hw.encoder);
-  foc.abc.iphase[0] = adc_read_value_f32(&brd->ai.ia_fb);
-  foc.abc.iphase[1] = adc_read_value_f32(&brd->ai.ib_fb);
-  foc.abc.iphase[2] = adc_read_value_f32(&brd->ai.ic_fb);
-  foc.vbus = adc_read_value_f32(&brd->ai.vm_fb);
+  foc.rotor_angle_q31 = hal_encoder_read_angle_q31(&brd->hw.encoder);
+  foc.abc.iphase[0] = hal_analog_read_f32(&brd->ai.ia_fb);
+  foc.abc.iphase[1] = hal_analog_read_f32(&brd->ai.ib_fb);
+  foc.abc.iphase[2] = hal_analog_read_f32(&brd->ai.ic_fb);
+  foc.vbus = hal_analog_read_f32(&brd->ai.vm_fb);
   // Calculate new PWM
   moc_foc_update(&foc);
   // Update PWM
@@ -91,9 +91,9 @@ static void task_pwm_control(void *parameters) {
 
   // Zero Currents
   board_t *brd = board_get_handle();
-  float ia = adc_read_value_f32(&brd->ai.ia_fb);
-  float ib = adc_read_value_f32(&brd->ai.ib_fb);
-  float ic = adc_read_value_f32(&brd->ai.ic_fb);
+  float ia = hal_analog_read_f32(&brd->ai.ia_fb);
+  float ib = hal_analog_read_f32(&brd->ai.ib_fb);
+  float ic = hal_analog_read_f32(&brd->ai.ic_fb);
   brd->ai.ia_fb.offset = -ia;
   brd->ai.ib_fb.offset = -ib;
   brd->ai.ic_fb.offset = -ic;

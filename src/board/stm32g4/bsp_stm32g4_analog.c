@@ -140,7 +140,7 @@ void board_adc_setup(void) {
       //--- Adc1 ---
 
       .vbatt_mon =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "vbat",
               .channel = 1,
               .scale = ADC_SCALE_12BIT * 23.3881f,
@@ -149,7 +149,7 @@ void board_adc_setup(void) {
           },
 
       .vm_fb =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "vm",
               .channel = 13,
               .scale = ADC_SCALE_12BIT * 23.3881f,
@@ -158,7 +158,7 @@ void board_adc_setup(void) {
           },
 
       .vgd_mon =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "vgd",
               .channel = 3,
               .scale = ADC_SCALE_12BIT * 1.945525292f,
@@ -167,7 +167,7 @@ void board_adc_setup(void) {
           },
 
       .vl_mon =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "vl",
               .channel = 11,
               .scale = ADC_SCALE_12BIT * 15.31399397f,
@@ -176,7 +176,7 @@ void board_adc_setup(void) {
           },
 
       .im_fb =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "im",
               .channel = 4,
               .scale = ADC_SCALE_12BIT,
@@ -187,7 +187,7 @@ void board_adc_setup(void) {
       //--- Adc2 ---
 
       .temp_a =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "ta",
               .channel = 6,
               .scale = ADC_SCALE_12BIT,
@@ -196,7 +196,7 @@ void board_adc_setup(void) {
           },
 
       .temp_b =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "tb",
               .channel = 7,
               .scale = ADC_SCALE_12BIT,
@@ -204,7 +204,7 @@ void board_adc_setup(void) {
               .units = "C",
           },
       .temp_c =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "tc",
               .channel = 8,
               .scale = ADC_SCALE_12BIT,
@@ -213,7 +213,7 @@ void board_adc_setup(void) {
           },
 
       .temp_m =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "tm",
               .channel = 5,
               .scale = ADC_SCALE_12BIT,
@@ -224,7 +224,7 @@ void board_adc_setup(void) {
       //--- Adc3 ---
 
       .ia_fb =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "ia",
               .channel = 1,
               .scale = ADC_SCALE_12BIT / (0.001f * 20.0f),
@@ -233,7 +233,7 @@ void board_adc_setup(void) {
           },
 
       .va_fb =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "va",
               .channel = 2,
               .scale = 1.0,
@@ -244,7 +244,7 @@ void board_adc_setup(void) {
       //--- Adc4 ---
 
       .ic_fb =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "ic",
               .channel = 3,
               .scale = ADC_SCALE_12BIT / (0.001f * 20.0f),
@@ -253,7 +253,7 @@ void board_adc_setup(void) {
           },
 
       .vb_fb =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "vb",
               .channel = 15,
               .scale = ADC_SCALE_12BIT,
@@ -264,7 +264,7 @@ void board_adc_setup(void) {
       //--- Adc5 ---
 
       .ib_fb =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "ib",
               .channel = 3,
               .scale = ADC_SCALE_12BIT / (0.001f * 20.0f),
@@ -273,7 +273,7 @@ void board_adc_setup(void) {
           },
 
       .vc_fb =
-          (adc_input_t){
+          (hal_analog_input_t){
               .name = "vc",
               .channel = 6,
               .scale = 1.0,
