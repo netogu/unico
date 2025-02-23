@@ -13,19 +13,19 @@ typedef struct {
   uint32_t (*get_cpr)(void);
   void (*update)(void);
 
-} encoder_ops_t;
+} hal_encoder_ops_t;
 
 typedef struct {
-  encoder_ops_t ops;
+  hal_encoder_ops_t ops;
   uint32_t cpr;
 
-} encoder_t;
+} hal_encoder_t;
 
-int encoder_init(encoder_t *self, encoder_ops_t ops);
-int encoder_update(encoder_t *self);
-int32_t encoder_read_count(encoder_t *self);
-void encoder_set_offset(encoder_t *self, uint32_t count);
-int32_t encoder_read_angle_q31(encoder_t *self);
-float encoder_read_angle_f32(encoder_t *self);
+int hal_encoder_init(hal_encoder_t *self, hal_encoder_ops_t ops);
+int hal_encoder_update(hal_encoder_t *self);
+int32_t hal_encoder_read_count(hal_encoder_t *self);
+void hal_encoder_set_offset(hal_encoder_t *self, uint32_t count);
+int32_t hal_encoder_read_angle_q31(hal_encoder_t *self);
+float hal_encoder_read_angle_f32(hal_encoder_t *self);
 
 #endif

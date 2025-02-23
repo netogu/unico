@@ -4,6 +4,7 @@
 #include "rtos.h"
 #include "stm32g4.h"
 
+#include "hal_analog.h"
 #include "hal_encoder.h"
 
 #include "hal_system.h"

@@ -1,10 +1,7 @@
 #include "shell.h"
 #include "bsp.h"
 #include "hal.h"
-#include "hal_encoder.h"
 #include "rtos.h"
-#include "stm32g474xx.h"
-#include "stm32g4_adc.h"
 #include "taskmsg.h"
 #include "tusb.h"
 #include "uclib.h"
@@ -80,7 +77,7 @@ static const struct ush_descriptor ush_desc = {
 // pint ADC helper functions
 
 struct measurement {
-  adc_input_t ain;
+  hal_analog_input_t ain;
   enum {
     INT32,
     F32,
@@ -121,8 +118,8 @@ static void adc_test_read_callback(struct ush_object *self,
 
   uint32_t enc_data = 0;
   int32_t angle_q31 = 0;
-  adc_input_t enc_raw = {.name = "enc", .data = &enc_data};
-  adc_input_t angle = {
+  hal_analog_input_t enc_raw = {.name = "enc", .data = &enc_data};
+  hal_analog_input_t angle = {
       .name = "angle", .data = (uint32_t *)&angle_q31, .units = "rad"};
 
   struct measurement adc_list[13];
@@ -148,9 +145,9 @@ static void adc_test_read_callback(struct ush_object *self,
 
   uint32_t samples = 1;
   while (samples) {
-    encoder_update(&brd->hw.encoder);
-    enc_data = encoder_read_count(&brd->hw.encoder);
-    angle_q31 = encoder_read_angle_q31(&brd->hw.encoder);
+    hal_encoder_update(&brd->hw.encoder);
+    enc_data = hal_encoder_read_count(&brd->hw.encoder);
+    angle_q31 = hal_encoder_read_angle_q31(&brd->hw.encoder);
 
     uint8_t c = cli_usb_getc();
 
@@ -159,7 +156,7 @@ static void adc_test_read_callback(struct ush_object *self,
       break;
     } else if (c == 'z') {
       // zero encoder
-      encoder_set_offset(&brd->hw.encoder, 0);
+      hal_encoder_set_offset(&brd->hw.encoder, 0);
     }
 
     for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
@@ -170,7 +167,7 @@ static void adc_test_read_callback(struct ush_object *self,
 
       if (adc_list[i].type == F32) {
         char str_val[16];
-        float value_f32 = adc_read_value_f32(&adc_list[i].ain);
+        float value_f32 = hal_analog_read_f32(&adc_list[i].ain);
         uclib_ftoa(value_f32, str_val, 2);
         cli_printf("%s=%s%s ", adc_list[i].ain.name, str_val,
                    adc_list[i].ain.units);

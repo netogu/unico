@@ -24,7 +24,7 @@
  ******************************************************************************/
 
 #include "stm32g4_adc.h"
-#include "stm32g4_common.h"
+#include "hal_analog.h"
 
 static int adc_configure_input_sample_time(adc_t *self);
 static int adc_configure_regular_input_sequence(const adc_t *self);
@@ -129,7 +129,7 @@ int adc_calibrate_blocking(adc_t *self) {
   return 0;
 }
 
-int adc_register_input(adc_t *self, adc_input_t *input, char input_type,
+int adc_register_input(adc_t *self, hal_analog_input_t *input, char input_type,
                        uint16_t sample_time) {
 
   if (input_type == 'r') {
@@ -284,7 +284,7 @@ static int adc_configure_regular_input_sequence(const adc_t *self) {
 
     for (uint16_t i = 0; i < self->num_regular_inputs; i++) {
 
-      adc_input_t *input = self->regular_inputs[i].input;
+      hal_analog_input_t *input = self->regular_inputs[i].input;
 
       if (i < 4) {
         sqr1 |= input->channel << (ADC_SQR1_SQ1_Pos + (i) * 6);
@@ -352,11 +352,4 @@ static int adc_configure_injected_input_sequence(adc_t *self) {
   adc_regs->JSQR = reg_val;
 
   return 0;
-}
-
-inline uint32_t adc_read_raw(adc_input_t *self) { return *self->data; }
-
-float adc_read_value_f32(adc_input_t *self) {
-  float value = *self->data * self->scale + self->offset;
-  return value;
 }

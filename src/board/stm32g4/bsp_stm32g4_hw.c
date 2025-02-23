@@ -142,7 +142,7 @@ uint32_t menc_get_cpr(void) { return menc_abz.cpr; }
 void menc_set_offset(uint32_t offset) { qenc_load(&menc_abz, offset); }
 void menc_update(void) { __NOP(); }
 
-encoder_ops_t menc_ops = (encoder_ops_t){
+hal_encoder_ops_t menc_ops = (hal_encoder_ops_t){
     .read = menc_read,
     .get_cpr = menc_get_cpr,
     .set_offset = menc_set_offset,
@@ -153,5 +153,5 @@ void board_encoder_setup(void) {
   board_t *brd = board_get_handle();
 
   qenc_init(&menc_abz);
-  encoder_init(&brd->hw.encoder, menc_ops);
+  hal_encoder_init(&brd->hw.encoder, menc_ops);
 }

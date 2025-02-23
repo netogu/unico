@@ -6,11 +6,11 @@
 #include <stdint.h>
 #include <string.h>
 
-int encoder_init(encoder_t *self, encoder_ops_t ops) {
+int hal_encoder_init(hal_encoder_t *self, hal_encoder_ops_t ops) {
   if (self == NULL) {
     return -1;
   }
-  memset(self, 0, sizeof(encoder_t));
+  memset(self, 0, sizeof(hal_encoder_t));
 
   self->ops = ops;
   self->cpr = self->ops.get_cpr();
@@ -18,7 +18,7 @@ int encoder_init(encoder_t *self, encoder_ops_t ops) {
   return 0;
 }
 
-int encoder_update(encoder_t *self) {
+int hal_encoder_update(hal_encoder_t *self) {
   if (self == NULL) {
     return -1;
   }
@@ -27,11 +27,13 @@ int encoder_update(encoder_t *self) {
   return 0;
 }
 
-int32_t encoder_read_count(encoder_t *self) { return self->ops.read(); }
-void encoder_set_offset(encoder_t *self, uint32_t offset) {
+int32_t hal_encoder_read_count(hal_encoder_t *self) { return self->ops.read(); }
+
+void hal_encoder_set_offset(hal_encoder_t *self, uint32_t offset) {
   self->ops.set_offset(offset);
 }
-int32_t encoder_read_angle_q31(encoder_t *self) {
+
+int32_t hal_encoder_read_angle_q31(hal_encoder_t *self) {
   int32_t cpr = self->cpr;
   int32_t total_count = self->ops.read();
   int32_t pos = (total_count % cpr);

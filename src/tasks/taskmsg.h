@@ -1,7 +1,7 @@
 #ifndef __TASKMSG_H
 #define __TASKMSG_H
 
-#include "lib/moc.h"
+#include "lib/motor_control.h"
 #include "rtos.h"
 #include "shell.h"
 #include <stdbool.h>
