@@ -9,6 +9,8 @@ void uclib_ftoa(float f32, char *s, int decimal_places) {
   if (f32 < 0) {
     *s++ = '-';
     f32 = -f32; // Convert to positive
+  } else {
+    *s++ = '+';
   }
 
   // Round the number correctly
