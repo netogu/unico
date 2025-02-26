@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: MIT
  ******************************************************************************/
 
-#include "stm32g4_uart.h"
+#include "hal.h"
 #include "stm32g474xx.h"
 
 #define UART_STATUS_OK 0
@@ -45,7 +45,7 @@
 #define UART_DMA_RX_BUFFER_SIZE 64
 static uint8_t uart_dma_rx_buffer[UART_DMA_RX_BUFFER_SIZE];
 
-static inline void lpuart_init(uart_t *self) {
+static inline void lpuart_init(hal_uart_t *self) {
   (void)self;
 
   // Set LPUART clock source to PCLK
@@ -60,7 +60,7 @@ static inline void lpuart_init(uart_t *self) {
   NVIC_EnableIRQ(LPUART1_IRQn);
 }
 
-static inline void usart1_init(uart_t *self) {
+static inline void usart1_init(hal_uart_t *self) {
   (void)self;
   // Set USART1 clock source to PCLK
   RCC->CCIPR &= ~(RCC_CCIPR_USART1SEL);
@@ -75,7 +75,7 @@ static inline void usart1_init(uart_t *self) {
   NVIC_EnableIRQ(USART1_IRQn);
 }
 
-static inline void usart3_init(uart_t *self) {
+static inline void usart3_init(hal_uart_t *self) {
   (void)self;
   // Set USART3 clock source to PCLK
   RCC->CCIPR &= ~(RCC_CCIPR_USART3SEL);
@@ -90,7 +90,9 @@ static inline void usart3_init(uart_t *self) {
   NVIC_EnableIRQ(USART3_IRQn);
 }
 
-static int usart_enable_dma(uart_t *self) {
+static int hal_usart_enable_dma(hal_uart_t *self) {
+
+  USART_TypeDef *uart = (USART_TypeDef *)self->port;
 
   // Turn on DMA1 and DMAMUX1 clocks
   RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN | RCC_AHB1ENR_DMAMUX1EN;
@@ -98,7 +100,7 @@ static int usart_enable_dma(uart_t *self) {
   (void)tmpreg;
 
   // Configure DMA1 Channel 2 for UART RX
-  DMA1_Channel2->CPAR = (uint32_t)&(self->instance->RDR);
+  DMA1_Channel2->CPAR = (uint32_t)&(uart->RDR);
   DMA1_Channel2->CMAR = (uint32_t)uart_dma_rx_buffer;
   DMA1_Channel2->CNDTR = UART_DMA_RX_BUFFER_SIZE;
   DMA1_Channel2->CCR = 0;
@@ -108,7 +110,7 @@ static int usart_enable_dma(uart_t *self) {
   // Route USART3 RX DMA REQ to DMA1 Channel 2
 
   // Configure DMA1 Channel 3 for UART TX
-  DMA1_Channel3->CPAR = (uint32_t)&(self->instance->TDR);
+  DMA1_Channel3->CPAR = (uint32_t)&(uart->TDR);
   DMA1_Channel3->CMAR = 0;
   DMA1_Channel3->CNDTR = 0;
   DMA1_Channel3->CCR = 0;
@@ -117,15 +119,15 @@ static int usart_enable_dma(uart_t *self) {
       DMA_CCR_MINC | DMA_CCR_DIR | DMA_CCR_TCIE | DMA_CCR_HTIE;
 
   // Route DMA Requests
-  if (self->instance == USART3) {
+  if (uart == USART3) {
     DMAMUX1_Channel1->CCR = USART3_DMA_RX_REQ_NUM;
     DMAMUX1_Channel2->CCR = USART3_DMA_TX_REQ_NUM;
-  } else if (self->instance == LPUART1) {
+  } else if (uart == LPUART1) {
     DMAMUX1_Channel1->CCR = LPUART1_DMA_RX_REQ_NUM;
     DMAMUX1_Channel2->CCR = LPUART1_DMA_TX_REQ_NUM;
-  } else if (self->instance == USART1) {
-    DMAMUX1_Channel2->CCR = USART1_DMA_TX_REQ_NUM;
+  } else if (uart == USART1) {
     DMAMUX1_Channel1->CCR = USART1_DMA_RX_REQ_NUM;
+    DMAMUX1_Channel2->CCR = USART1_DMA_TX_REQ_NUM;
   } else {
     return -1; // error
   }
@@ -136,7 +138,7 @@ static int usart_enable_dma(uart_t *self) {
   DMA1_Channel3->CCR |= DMA_CCR_EN;
 
   // Enable USART DMA
-  self->instance->CR3 |= (USART_CR3_DMAT | USART_CR3_DMAR);
+  uart->CR3 |= (USART_CR3_DMAT | USART_CR3_DMAR);
 
   // Enable interrupts
   NVIC_EnableIRQ(DMA1_Channel2_IRQn);
@@ -145,7 +147,9 @@ static int usart_enable_dma(uart_t *self) {
   return 0;
 }
 
-int uart_start_dma_tx_transfer(uart_t *self, DMA_Channel_TypeDef *dma_channel) {
+int hal_uart_start_dma_tx_transfer(hal_uart_t *self) {
+
+  DMA_Channel_TypeDef *dma_channel = DMA1_Channel2;
 
   if (self->tx_dma_current_transfer_size > 0) {
     // DMA is busy
@@ -153,7 +157,7 @@ int uart_start_dma_tx_transfer(uart_t *self, DMA_Channel_TypeDef *dma_channel) {
   }
 
   self->tx_dma_current_transfer_size =
-      uart_fifo_get_linear_size(&self->tx_fifo);
+      hal_uart_fifo_get_linear_size(&self->tx_fifo);
 
   if (self->tx_dma_current_transfer_size > 0) {
     // Some data to transfer
@@ -182,7 +186,7 @@ int uart_start_dma_tx_transfer(uart_t *self, DMA_Channel_TypeDef *dma_channel) {
   return 0;
 }
 
-void uart_service_rx_dma(uart_t *self) {
+void hal_uart_service_rx_dma(hal_uart_t *self) {
 
   static uint32_t prev_buffer_index = 0;
   uint32_t buffer_index = UART_DMA_RX_BUFFER_SIZE - DMA1_Channel2->CNDTR;
@@ -194,18 +198,18 @@ void uart_service_rx_dma(uart_t *self) {
       // Data is contiguous
       uint32_t bytes_read = buffer_index - prev_buffer_index;
       for (uint16_t i = 0; i < bytes_read; i++) {
-        uart_fifo_push(&self->rx_fifo,
-                       uart_dma_rx_buffer[prev_buffer_index + i]);
+        hal_uart_fifo_push(&self->rx_fifo,
+                           uart_dma_rx_buffer[prev_buffer_index + i]);
       }
     } else {
       // Data is split
       uint32_t bytes_read = UART_DMA_RX_BUFFER_SIZE - prev_buffer_index;
       for (uint16_t i = 0; i < bytes_read; i++) {
-        uart_fifo_push(&self->rx_fifo,
-                       uart_dma_rx_buffer[prev_buffer_index + i]);
+        hal_uart_fifo_push(&self->rx_fifo,
+                           uart_dma_rx_buffer[prev_buffer_index + i]);
       }
       for (uint16_t i = 0; i < buffer_index; i++) {
-        uart_fifo_push(&self->rx_fifo, uart_dma_rx_buffer[i]);
+        hal_uart_fifo_push(&self->rx_fifo, uart_dma_rx_buffer[i]);
       }
     }
   }
@@ -217,112 +221,117 @@ void uart_service_rx_dma(uart_t *self) {
   }
 }
 
-void uart_clear_fifo(uart_fifo_t *self) {
+void hal_uart_clear_fifo(hal_uart_fifo_t *self) {
   self->head = 0;
   self->tail = 0;
   self->size = 0;
 }
 
-int uart_init_dma(uart_t *self) {
-  if (0 != uart_init(self)) {
+int hal_uart_init_dma(hal_uart_t *self, const hal_uart_config_t *config) {
+  if (0 != hal_uart_init(self, config)) {
     return -1; // error
   }
+
+  USART_TypeDef *uart = (USART_TypeDef *)self->port;
+
   self->tx_dma_current_transfer_size = 0;
-  if (0 != usart_enable_dma(self)) {
+  if (0 != hal_usart_enable_dma(self)) {
     return -1; // error
   }
 
   // Enable UART
-  self->instance->CR1 |= (USART_CR1_UE);
+  uart->CR1 |= (USART_CR1_UE);
   return 0;
 }
 
-int uart_init(uart_t *self) {
+int hal_uart_init(hal_uart_t *self, const hal_uart_config_t *config) {
 
-  uart_clear_fifo(&self->rx_fifo);
-  uart_clear_fifo(&self->tx_fifo);
+  USART_TypeDef *uart = (USART_TypeDef *)self->port;
 
-  if (self->instance == LPUART1) {
+  hal_uart_clear_fifo(&self->rx_fifo);
+  hal_uart_clear_fifo(&self->tx_fifo);
+
+  if (uart == LPUART1) {
     lpuart_init(self);
-  } else if (self->instance == USART3) {
+  } else if (uart == USART3) {
     usart3_init(self);
-  } else if (self->instance == USART1) {
+  } else if (uart == USART1) {
     usart1_init(self);
   } else {
     return -1;
   }
 
   // Set UART Prescaler
-  self->instance->PRESC = 0x00;
-  self->instance->PRESC |= (UART_INPUT_CLOCK_PRESCALER_NONE & 0x0F);
+  uart->PRESC = 0x00;
+  uart->PRESC |= (UART_INPUT_CLOCK_PRESCALER_NONE & 0x0F);
 
   // Disable UART
-  self->instance->CR1 &= ~(USART_CR1_UE);
-  self->instance->CR1 = 0x00;
+  uart->CR1 &= ~(USART_CR1_UE);
+  uart->CR1 = 0x00;
 
-  if (self->instance == LPUART1) {
+  if (uart == LPUART1) {
     // Set baudrate LPUART Specific
-    uint32_t usartdiv = SystemCoreClock / self->config.baudrate * 256;
-    self->instance->BRR = usartdiv & 0x0FFFFF; // 20 bits
+    uint32_t usartdiv = SystemCoreClock / config->baudrate * 256;
+    uart->BRR = usartdiv & 0x0FFFFF; // 20 bits
   } else {
     // Set baudrate
-    uint32_t usartdiv = SystemCoreClock / self->config.baudrate;
-    self->instance->BRR = usartdiv & 0x0FFFF; // 16 bits
+    uint32_t usartdiv = SystemCoreClock / config->baudrate;
+    uart->BRR = usartdiv & 0x0FFFF; // 16 bits
   }
 
   // Set data bits
   // 8 bits by default
-  self->instance->CR1 &= ~(USART_CR1_M1 | USART_CR1_M0);
-  if (self->config.word_length == UART_DATA_BITS_9) {
-    self->instance->CR1 |= (USART_CR1_M0);
-  } else if (self->config.word_length == UART_DATA_BITS_7) {
-    self->instance->CR1 |= (USART_CR1_M1);
+  uart->CR1 &= ~(USART_CR1_M1 | USART_CR1_M0);
+  if (config->word_length == UART_DATA_BITS_9) {
+    uart->CR1 |= (USART_CR1_M0);
+  } else if (config->word_length == UART_DATA_BITS_7) {
+    uart->CR1 |= (USART_CR1_M1);
   }
 
   // Set parity
-  self->instance->CR1 &= ~(USART_CR1_PCE | USART_CR1_PS);
-  if (self->config.parity == UART_PARITY_EVEN) {
-    self->instance->CR1 |= (USART_CR1_PCE);
-    self->instance->CR1 |= (self->config.parity << USART_CR1_PS_Pos);
+  uart->CR1 &= ~(USART_CR1_PCE | USART_CR1_PS);
+  if (config->parity == UART_PARITY_EVEN) {
+    uart->CR1 |= (USART_CR1_PCE);
+    uart->CR1 |= (config->parity << USART_CR1_PS_Pos);
   } // else LPUART_PARITY_NONE
 
   // Set stop bits
-  self->instance->CR2 &= ~(USART_CR2_STOP);
-  self->instance->CR2 |= (self->config.stop_bits << USART_CR2_STOP_Pos);
+  uart->CR2 &= ~(USART_CR2_STOP);
+  uart->CR2 |= (config->stop_bits << USART_CR2_STOP_Pos);
 
   // Set Flow Control
-  self->instance->CR3 &= ~(USART_CR3_RTSE | USART_CR3_CTSE);
-  if (self->config.flow_control & UART_FLOW_CONTROL_RTS) {
-    self->instance->CR3 |= (USART_CR3_RTSE);
-  } else if (self->config.flow_control & UART_FLOW_CONTROL_CTS) {
-    self->instance->CR3 |= (USART_CR3_CTSE);
-  } else if (self->config.flow_control & UART_FLOW_CONTROL_RTS_CTS) {
-    self->instance->CR3 |= (USART_CR3_RTSE | USART_CR3_CTSE);
+  uart->CR3 &= ~(USART_CR3_RTSE | USART_CR3_CTSE);
+  if (config->flow_control & UART_FLOW_CONTROL_RTS) {
+    uart->CR3 |= (USART_CR3_RTSE);
+  } else if (config->flow_control & UART_FLOW_CONTROL_CTS) {
+    uart->CR3 |= (USART_CR3_CTSE);
+  } else if (config->flow_control & UART_FLOW_CONTROL_RTS_CTS) {
+    uart->CR3 |= (USART_CR3_RTSE | USART_CR3_CTSE);
   } // else LPUART_FLOW_CONTROL_NONE
 
   // Set mode
-  self->instance->CR1 &= ~(USART_CR1_RE | USART_CR1_TE);
-  if (self->config.mode == UART_MODE_RX) {
-    self->instance->CR1 |= (USART_CR1_RE);
-  } else if (self->config.mode == UART_MODE_TX) {
-    self->instance->CR1 |= (USART_CR1_TE);
-  } else if (self->config.mode == UART_MODE_RX_TX) {
-    self->instance->CR1 |= (USART_CR1_RE | USART_CR1_TE);
+  uart->CR1 &= ~(USART_CR1_RE | USART_CR1_TE);
+  if (config->mode == UART_MODE_RX) {
+    uart->CR1 |= (USART_CR1_RE);
+  } else if (config->mode == UART_MODE_TX) {
+    uart->CR1 |= (USART_CR1_TE);
+  } else if (config->mode == UART_MODE_RX_TX) {
+    uart->CR1 |= (USART_CR1_RE | USART_CR1_TE);
   } // else LPUART_MODE_NONE
 
   // Enable UART RXNE interrupt
-  // self->instance->CR1 |= (USART_CR1_RXNEIE);
+  // uart->CR1 |= (USART_CR1_RXNEIE);
   // Enable UART TXE interrupt
-  // self->instance->CR1 |= (USART_CR1_TXEIE);
+  // uart->CR1 |= (USART_CR1_TXEIE);
   // Enable UART IDLE interrupt
-  self->instance->CR1 |= (USART_CR1_IDLEIE);
+  uart->CR1 |= (USART_CR1_IDLEIE);
 
   // // Enable UART
-  // self->instance->CR1 |= (USART_CR1_UE);
+  // uart->CR1 |= (USART_CR1_UE);
   return 0;
 }
 
-int uart_fifo_push(uart_fifo_t *self, uint8_t byte) {
+int hal_uart_fifo_push(hal_uart_fifo_t *self, uint8_t byte) {
   uint16_t next_head = (self->head + 1) % UART_BUFFER_SIZE;
   if (next_head != self->tail) {
     // FIFO is not full
@@ -335,7 +344,7 @@ int uart_fifo_push(uart_fifo_t *self, uint8_t byte) {
   return 1;
 }
 
-int uart_fifo_pop(uart_fifo_t *self, uint8_t *byte) {
+int hal_uart_fifo_pop(hal_uart_fifo_t *self, uint8_t *byte) {
   if (self->size > 0) {
     // FIFO is not empty
     *byte = self->buffer[self->tail];
@@ -347,7 +356,7 @@ int uart_fifo_pop(uart_fifo_t *self, uint8_t *byte) {
   return 1;
 }
 
-uint16_t uart_fifo_get_linear_size(uart_fifo_t *self) {
+uint16_t hal_uart_fifo_get_linear_size(hal_uart_fifo_t *self) {
   if (self->head >= self->tail) {
     return self->head - self->tail;
   } else {
@@ -355,27 +364,27 @@ uint16_t uart_fifo_get_linear_size(uart_fifo_t *self) {
   }
 }
 
-int uart_write(uart_t *self, uint8_t *data, uint16_t len) {
+int hal_uart_write(hal_uart_t *self, uint8_t *data, uint16_t len) {
   uint16_t bytes_written = 0;
 
   for (uint16_t i = 0; i < len; i++) {
-    uart_fifo_push(&self->tx_fifo, data[i]);
+    hal_uart_fifo_push(&self->tx_fifo, data[i]);
     bytes_written++;
   }
   // Enable TXE interrupt
-  // self->instance->CR1 |= USART_CR1_TXEIE;
+  // uart->CR1 |= USART_CR1_TXEIE;
 
-  uart_start_dma_tx_transfer(self, DMA1_Channel3);
+  hal_uart_start_dma_tx_transfer(self);
 
   return bytes_written;
 }
 
-int uart_read(uart_t *self, uint8_t *data, uint16_t size) {
+int hal_uart_read(hal_uart_t *self, uint8_t *data, uint16_t size) {
   uint16_t bytes_read = 0;
 
   while (bytes_read < size && self->rx_fifo.size > 0) {
     uint8_t byte;
-    uart_fifo_pop(&self->rx_fifo, &byte);
+    hal_uart_fifo_pop(&self->rx_fifo, &byte);
     data[bytes_read++] = byte;
   }
 

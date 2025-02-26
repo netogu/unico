@@ -48,7 +48,7 @@ int _write(int file, char *ptr, int len) {
   (void)file;
 
   board_t *brd = board_get_handle();
-  uart_write(&brd->com.console, (uint8_t *)ptr, len);
+  hal_uart_write(&brd->com.console, (uint8_t *)ptr, len);
 
   return len;
 }

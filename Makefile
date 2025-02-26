@@ -16,7 +16,7 @@ OPT = -Og
 # Debuger
 #------------------------------------------------+
 DEBUGER = openocd
-DEBUGER_CONF = src/drivers/stm32g4/scripts/stm32g4_openocd.cfg
+DEBUGER_CONF = src/hal/hal_stm32/scripts/stm32g4_openocd.cfg
 GDB = arm-none-eabi-gdb
 
 #------------------------------------------------+
@@ -36,6 +36,7 @@ C_SOURCES = $(wildcard src/board/stm32g4/*.c)
 C_SOURCES += $(wildcard src/main.c) 
 C_SOURCES += $(wildcard src/board/*.c) 
 C_SOURCES += $(wildcard src/hal/*.c) 
+C_SOURCES += $(wildcard src/hal/hal_stm32/*.c) 
 C_SOURCES += $(wildcard src/shell/*.c) 
 C_SOURCES += $(wildcard src/rtos/*.c) 
 C_SOURCES += $(wildcard src/tasks/*.c) 
@@ -61,7 +62,7 @@ C_SOURCES += $(FREERTOS)/portable/MemMang/heap_3.c
 # ASM Sources
 #------------------------------------------------+
 ASM_SOURCES =  \
-src/drivers/stm32g4/stm32g4_startup.s
+src/hal/hal_stm32/hal_stm32_startup.s
 
 #------------------------------------------------+
 # Includes
@@ -75,6 +76,7 @@ C_INCLUDES =  \
 -Isrc/shell \
 -Isrc/board \
 -Isrc/hal \
+-Isrc/hal/hal_stm32 \
 -Isrc/rtos \
 -Isrc/tasks \
 -Isrc/lib \
@@ -92,7 +94,7 @@ C_INCLUDES =  \
 #------------------------------------------------+
 # Linker 
 #------------------------------------------------+
-LDSCRIPT = src/drivers/stm32g4/scripts/stm32g474_linker_script.ld
+LDSCRIPT = src/hal/hal_stm32/scripts/stm32g474_linker_script.ld
 LIBS = -lc -lm -lnosys 
 LIBDIR = 
 LDFLAGS = $(MCU) -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections

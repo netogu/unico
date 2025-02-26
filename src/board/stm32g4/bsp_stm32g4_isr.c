@@ -1,6 +1,7 @@
 #include "bsp.h"
 #include "hal.h"
-#include "stm32g4_pwm.h"
+#include "hal_stm32_pwm.h"
+#include "stm32g474xx.h"
 #include "tusb.h"
 
 //------------------------------------------------------+
@@ -113,25 +114,28 @@ void USBWakeUp_IRQHandler(void) { tud_int_handler(0); }
 // UART interrupt Handler
 //--------------------------------------------------------------------+
 
-static inline void uart_receive_byte(uart_t *self) {
+static inline void uart_receive_byte(hal_uart_t *self) {
   uint8_t data;
+  USART_TypeDef *uart = (USART_TypeDef *)self->port;
 
-  data = (uint8_t)self->instance->RDR & 0xFF;
-  uart_fifo_push(&self->rx_fifo, data);
+  data = (uint8_t)uart->RDR & 0xFF;
+  hal_uart_fifo_push(&self->rx_fifo, data);
   // Clear RXNE flag by reading data
 }
 
-static inline void uart_send_byte(uart_t *self) {
+static inline void uart_send_byte(hal_uart_t *self) {
+
+  USART_TypeDef *uart = (USART_TypeDef *)self->port;
 
   if (self->tx_fifo.size == 0) {
     // If empty, disable TXE interrupt
-    self->instance->CR1 &= ~USART_CR1_TXEIE;
+    uart->CR1 &= ~USART_CR1_TXEIE;
     return;
   } else {
     // If not empty, send data
     uint8_t tx_byte;
-    uart_fifo_pop(&self->tx_fifo, &tx_byte);
-    self->instance->TDR = tx_byte;
+    hal_uart_fifo_pop(&self->tx_fifo, &tx_byte);
+    uart->TDR = tx_byte;
     // ISR Cleared by writing data to TDR
   }
 }
@@ -157,7 +161,7 @@ void LPUART1_IRQHandler(void) {
   if (LPUART1->ISR & USART_ISR_IDLE) {
     // Clear the IDLE flag
     LPUART1->ICR |= USART_ICR_IDLECF;
-    uart_service_rx_dma(&brd->com.console);
+    hal_uart_service_rx_dma(&brd->com.console);
     g_isr_counter.lpuart1_idle++;
   }
 }
@@ -181,7 +185,7 @@ void USART1_IRQHandler(void) {
   if (USART1->ISR & USART_ISR_IDLE) {
     // Clear the IDLE flag
     USART1->ICR |= USART_ICR_IDLECF;
-    uart_service_rx_dma(&brd->com.console);
+    hal_uart_service_rx_dma(&brd->com.console);
   }
 }
 
@@ -205,7 +209,7 @@ void USART3_IRQHandler(void) {
   if (USART3->ISR & USART_ISR_IDLE) {
     // Clear the IDLE flag
     USART3->ICR |= USART_ICR_IDLECF;
-    uart_service_rx_dma(&brd->com.console);
+    hal_uart_service_rx_dma(&brd->com.console);
     g_isr_counter.usart3_idle++;
   }
 }
@@ -217,13 +221,13 @@ void DMA1_Channel2_IRQHandler(void) {
   if (DMA1->ISR & DMA_ISR_TCIF2) {
     // Service the RX DMA buffer
     DMA1->IFCR |= DMA_IFCR_CTCIF2;
-    uart_service_rx_dma(&brd->com.console);
+    hal_uart_service_rx_dma(&brd->com.console);
   }
 
   if (DMA1->ISR & DMA_ISR_HTIF2) {
     // Service the RX DMA buffer
     DMA1->IFCR |= DMA_IFCR_CHTIF2;
-    uart_service_rx_dma(&brd->com.console);
+    hal_uart_service_rx_dma(&brd->com.console);
   }
 }
 
@@ -243,7 +247,7 @@ void DMA1_Channel3_IRQHandler(void) {
     // brd->lpuart1.tx_fifo.size -= brd->lpuart1.tx_dma_current_transfer_size;
     brd->com.console.tx_dma_current_transfer_size = 0;
     // Transfer what may be left in the buffer
-    uart_start_dma_tx_transfer(&brd->com.console, DMA1_Channel3);
+    hal_uart_start_dma_tx_transfer(&brd->com.console);
   }
 
   if (DMA1->ISR & DMA_ISR_HTIF3) {

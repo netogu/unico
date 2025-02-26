@@ -1,9 +1,9 @@
 
 #include "bsp.h"
-#include "hal_encoder.h"
+#include "hal.h"
+#include "hal_stm32_pwm.h"
+#include "hal_stm32_qenc.h"
 #include "log.h"
-#include "stm32g4_pwm.h"
-#include "stm32g4_qenc.h"
 
 //------------------------------------------------------+
 // PWM Config
@@ -13,56 +13,26 @@ void board_pwm_setup(void) {
 
   board_t *brd = board_get_handle();
 
-  brd->hw.mcpwm =
+  hal_pwm_t pwma = {.regs = HRTIM1, .channel = PWM_HRTIM_TIM_A};
+  hal_pwm_t pwmb = {.regs = HRTIM1, .channel = PWM_HRTIM_TIM_F};
+  hal_pwm_t pwmc = {.regs = HRTIM1, .channel = PWM_HRTIM_TIM_E};
 
-      (pwm_3ph_t){
-          .pwma =
-              (pwm_t){
-                  .options =
-                      {
-                          .pwm_timer = PWM_TIMER_HRTIM1,
-                          .pwm_channel = PWM_HRTIM_TIM_A,
-                          .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
-                          .polarity = HRTIM_PWM_POLARITY_NORMAL,
-                      },
-              },
-
-          .pwmb =
-              (pwm_t){
-                  .options =
-                      {
-                          .pwm_timer = PWM_TIMER_HRTIM1,
-                          .pwm_channel = PWM_HRTIM_TIM_F,
-                          .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
-                          .polarity = HRTIM_PWM_POLARITY_NORMAL,
-                      },
-              },
-
-          .pwmc =
-              (pwm_t){
-                  .options =
-                      {
-                          .pwm_timer = PWM_TIMER_HRTIM1,
-                          .pwm_channel = PWM_HRTIM_TIM_E,
-                          .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
-                          .polarity = HRTIM_PWM_POLARITY_NORMAL,
-                      },
-              },
-
-          .mode = PWM_3PHASE_MODE_6PWM,
-      },
+  brd->hw.mcpwm.pwm[0] = pwma;
+  brd->hw.mcpwm.pwm[1] = pwmb;
+  brd->hw.mcpwm.pwm[2] = pwmc;
 
   printf("%s", timestamp());
-  if (pwm_3ph_init(&brd->hw.mcpwm, 50000, 100) != 0) {
+  if (hal_pwm_3ph_init(&brd->hw.mcpwm, 50000, 100) != 0) {
     LOG_FAIL("PWM");
   } else {
     LOG_OK("PWM");
   }
 
-  pwm_3ph_set_duty(&brd->hw.mcpwm, 0.5f, 0.5f, 0.5f);
-  pwm_enable_adc_trigger(&brd->hw.mcpwm.pwma);
-  pwm_enable_period_interrupt(&brd->hw.mcpwm.pwma);
-  pwm_3ph_start(&brd->hw.mcpwm);
+  float duty_cycles[3] = {0.5f, 0.5f, 0.5f};
+  hal_pwm_3ph_set_duty_f32(&brd->hw.mcpwm, duty_cycles);
+  hal_stm32_pwm_enable_adc_trigger(&brd->hw.mcpwm.pwm[0]);
+  hal_stm32_pwm_enable_period_interrupt(&brd->hw.mcpwm.pwm[0]);
+  hal_pwm_3ph_start(&brd->hw.mcpwm);
 }
 
 //------------------------------------------------------
@@ -142,7 +112,7 @@ uint32_t menc_get_cpr(void) { return menc_abz.cpr; }
 void menc_set_offset(uint32_t offset) { qenc_load(&menc_abz, offset); }
 void menc_update(void) { __NOP(); }
 
-encoder_ops_t menc_ops = (encoder_ops_t){
+hal_encoder_ops_t menc_ops = (hal_encoder_ops_t){
     .read = menc_read,
     .get_cpr = menc_get_cpr,
     .set_offset = menc_set_offset,
@@ -153,5 +123,5 @@ void board_encoder_setup(void) {
   board_t *brd = board_get_handle();
 
   qenc_init(&menc_abz);
-  encoder_init(&brd->hw.encoder, menc_ops);
+  hal_encoder_init(&brd->hw.encoder, menc_ops);
 }
