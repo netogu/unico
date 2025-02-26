@@ -1,5 +1,4 @@
-#include "stm32g4_spi.h"
-
+#include "hal_stm32_spi.h"
 
 inline int spi_is_busy(struct spi *spi) {
   return spi->instance->SR & SPI_SR_BSY_Msk;
@@ -34,12 +33,10 @@ inline int spi_enable(struct spi *spi) {
 
 inline int spi_disable(struct spi *spi) {
 
-
   spi->instance->CR1 &= ~SPI_CR1_SPE;
 
   return 0;
 }
-
 
 int spi_init_master(struct spi *spi) {
 
@@ -62,9 +59,10 @@ int spi_init_master(struct spi *spi) {
   spi->instance->CR2 = 0;
 
   // Set Baudrate
-  spi->instance->CR1 = spi->baudrate << SPI_CR1_BR_Pos; 
+  spi->instance->CR1 = spi->baudrate << SPI_CR1_BR_Pos;
   // Configure Polarity & Phase
-  spi->instance->CR1 |= (spi->polarity << SPI_CR1_CPOL_Pos) | (spi->phase << SPI_CR1_CPHA_Pos);
+  spi->instance->CR1 |=
+      (spi->polarity << SPI_CR1_CPOL_Pos) | (spi->phase << SPI_CR1_CPHA_Pos);
 
   // Select Simplex or half-duplex if needed
   // -- TODO add support for these modes
@@ -76,7 +74,8 @@ int spi_init_master(struct spi *spi) {
   // -- TODO
 
   // Configure SSI & SSM
-  spi->instance->CR1 |= SPI_CR1_SSM | SPI_CR1_SSI | SPI_CR1_MSTR; // Software NSS management, Master
+  spi->instance->CR1 |= SPI_CR1_SSM | SPI_CR1_SSI |
+                        SPI_CR1_MSTR; // Software NSS management, Master
 
   // Define data size
   spi->instance->CR2 |= (spi->data_size - 1) << SPI_CR2_DS_Pos;
@@ -110,7 +109,8 @@ int spi_set_fifo_rx_threshold_16bit(struct spi *spi) {
 
 int spi_write(struct spi *spi, uint16_t data) {
 
-  while (!spi_is_tx_buffer_empty(spi));
+  while (!spi_is_tx_buffer_empty(spi))
+    ;
   spi->instance->DR = data;
 
   return 0;
@@ -118,15 +118,16 @@ int spi_write(struct spi *spi, uint16_t data) {
 
 int spi_write_byte(struct spi *spi, uint8_t byte) {
 
-  while (!spi_is_tx_buffer_empty(spi));
-  *(volatile uint8_t *) &spi->instance->DR = byte;
+  while (!spi_is_tx_buffer_empty(spi))
+    ;
+  *(volatile uint8_t *)&spi->instance->DR = byte;
   return 0;
 }
 
-
 int spi_read(struct spi *spi, uint16_t *data) {
 
-  while (!spi_is_rx_buffer_not_empty(spi));
+  while (!spi_is_rx_buffer_not_empty(spi))
+    ;
   *data = spi->instance->DR;
 
   return 0;
@@ -136,13 +137,10 @@ int spi_transfer(struct spi *spi, uint16_t data_tx, uint16_t *data_rx) {
 
   spi_write(spi, data_tx);
 
-  while (!spi_is_rx_buffer_not_empty(spi));
+  while (!spi_is_rx_buffer_not_empty(spi))
+    ;
 
   *data_rx = spi->instance->DR;
 
   return 0;
 }
-
-
-
-

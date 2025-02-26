@@ -1,7 +1,7 @@
 #ifndef STM32G4_PWR_H
 #define STM32G4_PWR_H
 
-#include "stm32g4_common.h"
+#include "hal_stm32_common.h"
 
 enum pwr_vos_ranges {
   PWR_VOS_RANGE_X,

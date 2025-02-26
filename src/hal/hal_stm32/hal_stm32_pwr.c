@@ -1,4 +1,4 @@
-#include "stm32g4_pwr.h"
+#include "hal_stm32_pwr.h"
 
 void pwr_set_vos_range(enum pwr_vos_ranges scale) {
   Modify_register_field(PWR->CR1, PWR_CR1_VOS, scale);
@@ -8,6 +8,5 @@ void pwr_set_vos_range(enum pwr_vos_ranges scale) {
 }
 
 void pwr_enable_boost(void) { PWR->CR5 &= ~PWR_CR5_R1MODE; }
-
 
 void pwr_disable_boost(void) { PWR->CR5 |= PWR_CR5_R1MODE; }

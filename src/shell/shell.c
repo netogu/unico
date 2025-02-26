@@ -1,10 +1,8 @@
 #include "shell.h"
 #include "bsp.h"
 #include "hal.h"
-#include "hal_encoder.h"
+#include "hal_stm32_cordic.h"
 #include "rtos.h"
-#include "stm32g474xx.h"
-#include "stm32g4_adc.h"
 #include "taskmsg.h"
 #include "tusb.h"
 #include "uclib.h"
@@ -80,7 +78,7 @@ static const struct ush_descriptor ush_desc = {
 // pint ADC helper functions
 
 struct measurement {
-  adc_input_t ain;
+  hal_analog_input_t ain;
   enum {
     INT32,
     F32,
@@ -121,8 +119,8 @@ static void adc_test_read_callback(struct ush_object *self,
 
   uint32_t enc_data = 0;
   int32_t angle_q31 = 0;
-  adc_input_t enc_raw = {.name = "enc", .data = &enc_data};
-  adc_input_t angle = {
+  hal_analog_input_t enc_raw = {.name = "enc", .data = &enc_data};
+  hal_analog_input_t angle = {
       .name = "angle", .data = (uint32_t *)&angle_q31, .units = "rad"};
 
   struct measurement adc_list[13];
@@ -148,9 +146,9 @@ static void adc_test_read_callback(struct ush_object *self,
 
   uint32_t samples = 1;
   while (samples) {
-    encoder_update(&brd->hw.encoder);
-    enc_data = encoder_read_count(&brd->hw.encoder);
-    angle_q31 = encoder_read_angle_q31(&brd->hw.encoder);
+    hal_encoder_update(&brd->hw.encoder);
+    enc_data = hal_encoder_read_count(&brd->hw.encoder);
+    angle_q31 = hal_encoder_read_angle_q31(&brd->hw.encoder);
 
     uint8_t c = cli_usb_getc();
 
@@ -159,7 +157,7 @@ static void adc_test_read_callback(struct ush_object *self,
       break;
     } else if (c == 'z') {
       // zero encoder
-      encoder_set_offset(&brd->hw.encoder, 0);
+      hal_encoder_set_offset(&brd->hw.encoder, 0);
     }
 
     for (size_t i = 0; i < sizeof(adc_list) / sizeof(adc_list[0]); i++) {
@@ -170,7 +168,7 @@ static void adc_test_read_callback(struct ush_object *self,
 
       if (adc_list[i].type == F32) {
         char str_val[16];
-        float value_f32 = adc_read_value_f32(&adc_list[i].ain);
+        float value_f32 = hal_analog_read_f32(&adc_list[i].ain);
         uclib_ftoa(value_f32, str_val, 2);
         cli_printf("%s=%s%s ", adc_list[i].ain.name, str_val,
                    adc_list[i].ain.units);
@@ -244,10 +242,10 @@ static void drv_en_callback(struct ush_object *self,
   // arguments validation
   if (strcmp(argv[1], "1") == 0) {
     // turn gate driver on
-    gpio_pin_set(&brd->dio.motor_en);
+    hal_gpio_set(&brd->dio.motor_en);
   } else if (strcmp(argv[1], "0") == 0) {
     // turn gate driver off
-    gpio_pin_clear(&brd->dio.motor_en);
+    hal_gpio_clear(&brd->dio.motor_en);
   } else {
     // return predefined error message
     ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
@@ -275,10 +273,10 @@ static void mpwr_en_callback(struct ush_object *self,
   // arguments validation
   if (strcmp(argv[1], "1") == 0) {
     // turn gate driver on
-    gpio_pin_set(&brd->dio.mpwr_en);
+    hal_gpio_set(&brd->dio.mpwr_en);
   } else if (strcmp(argv[1], "0") == 0) {
     // turn VM efuse driver off
-    gpio_pin_clear(&brd->dio.mpwr_en);
+    hal_gpio_clear(&brd->dio.mpwr_en);
   } else {
     // return predefined error message
     ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
@@ -322,7 +320,7 @@ static void dpt_exec_callback(struct ush_object *self,
   (void)self; // unused
   (void)file; // unused
 
-  board_t *brd = board_get_handle();
+  // board_t *brd = board_get_handle();
 
   // arguments count validation
   if (argc < 3) {
@@ -331,7 +329,7 @@ static void dpt_exec_callback(struct ush_object *self,
     return;
   }
 
-  pwm_t *pwm = &brd->hw.mcpwm.pwma;
+  // hal_pwm_t *pwm = &brd->hw.mcpwm.pwm[0];
 
   int ton = atoi(argv[1]);
   ush_printf(self, "ton: %d ns\r\n", ton);
@@ -356,10 +354,10 @@ static void dpt_exec_callback(struct ush_object *self,
   ton < 0 ? ton = 0 : ton;
   toff < 0 ? toff = 0 : toff;
 
-  pwm_set_frequency(pwm, 1000000000 / (ton + toff));
-  pwm_set_duty(pwm, ton * 100 / (ton + toff));
-  pwm_set_n_cycle_run(pwm, n);
-  pwm_start(pwm);
+  // hal_pwm_set_frequency(pwm, 1000000000 / (ton + toff));
+  // hal_pwm_set_duty(pwm, ton * 100 / (ton + toff));
+  // hal_pwm_set_n_cycle_run(pwm, n);
+  // hal_pwm_start(pwm);
 }
 
 static void _print_pwmcon_msg(struct ush_object *self, pwmcon_msg_t *msg) {

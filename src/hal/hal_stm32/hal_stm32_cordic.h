@@ -1,7 +1,7 @@
 #ifndef STM32G4_CORDIC_H
 #define STM32G4_CORDIC_H
 
-#include "stm32g4_common.h"
+#include "hal_stm32_common.h"
 #include <math.h>
 
 typedef struct cordic_t {

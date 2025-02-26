@@ -1,5 +1,4 @@
-#include "stm32g4_usbpcd.h"
-
+#include "hal_stm32_usbpcd.h"
 
 // #define __USB_TABLE __attribute__((section(".usbtable")))
 // #define __USB_BUF __attribute__((section(".usbbuf")))
@@ -9,7 +8,6 @@ int usbpcd_init(void) {
   // Enable IO Clock & GPIO Port
   RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
   RCC->APB1ENR1 |= RCC_APB1ENR1_USBEN;
-
 
   // Enable macrocell
   USB->CNTR &= ~USB_CNTR_PDWN;
@@ -57,8 +55,7 @@ void usbpcd_clear_pma(void) {
   }
 }
 
-void usbpcd_copy_memory(uint16_t *source, uint16_t *target,
-                            uint16_t length) {
+void usbpcd_copy_memory(uint16_t *source, uint16_t *target, uint16_t length) {
   for (uint32_t i = 0; i < length / 2; i++) {
     target[i] = source[i];
   }

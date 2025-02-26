@@ -1,7 +1,7 @@
 #ifndef STM32G4_SPI_H
 #define STM32G4_SPI_H
 
-#include "stm32g4_common.h"
+#include "hal_stm32_common.h"
 
 enum spi_baudrate {
   SPI_BAUDRATE_PCLK_DIV_2 = 0,
@@ -38,6 +38,5 @@ int spi_write(struct spi *spi, uint16_t data);
 int spi_write_byte(struct spi *spi, uint8_t byte);
 int spi_read(struct spi *spi, uint16_t *data);
 int spi_transfer(struct spi *spi, uint16_t data_tx, uint16_t *data_rx);
-
 
 #endif // STM32G4_SPI_H
