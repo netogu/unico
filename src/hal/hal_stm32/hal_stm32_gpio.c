@@ -5,7 +5,8 @@ void hal_gpio_init(const hal_gpio_t *self) {
 
   GPIO_TypeDef *gpio = (GPIO_TypeDef *)self->port;
 
-  uint32_t port_ahb2_index = (uint32_t)self->port - (uint32_t)GPIOA;
+  uint32_t port_ahb2_index =
+      ((uint32_t)self->port - (uint32_t)GPIOA) / 0x0400UL;
 
   // Enable GPIO clock
   RCC->AHB2ENR |= (1 << port_ahb2_index);
