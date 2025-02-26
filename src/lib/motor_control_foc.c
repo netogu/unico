@@ -1,5 +1,6 @@
 #include "bsp.h"
 #include "dsp/controller_functions.h"
+#include "hal_stm32_cordic.h"
 #include "motor_control.h"
 #include <stdint.h>
 

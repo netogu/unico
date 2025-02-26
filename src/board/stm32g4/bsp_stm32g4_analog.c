@@ -1,6 +1,7 @@
 #include "bsp.h"
+#include "hal_stm32_adc.h"
 #include "log.h"
-#include "stm32g4.h"
+#include "stm32g4xx.h"
 
 static adc_t adc1 = {.regs = ADC1};
 static adc_t adc2 = {.regs = ADC2};
@@ -56,82 +57,60 @@ void board_opamp_setup(void) {
 void board_adc_setup(void) {
   board_t *brd = board_get_handle();
 
-  const gpio_t analog_pins[] = {
-      {.port = GPIO_PORT_A,
-       .pin = GPIO_PIN_0,
-       .mode = GPIO_MODE_ANALOG}, // Vbatt - ADC12_1
+  const hal_gpio_t analog_pins[] = {
+      {.port = GPIOA, .pin = 0, .mode = GPIO_MODE_ANALOG}, // Vbatt - ADC12_1
 
-      {.port = GPIO_PORT_A,
-       .pin = GPIO_PIN_1,
+      {.port = GPIOA,
+       .pin = 1,
        .mode = GPIO_MODE_ANALOG}, // VM_FB - ADC1_13 + OPAMP1/COMP1
 
-      {.port = GPIO_PORT_A,
-       .pin = GPIO_PIN_2,
-       .mode = GPIO_MODE_ANALOG}, // VGD_MON - ADC1_3
+      {.port = GPIOA, .pin = 2, .mode = GPIO_MODE_ANALOG}, // VGD_MON - ADC1_3
 
-      {.port = GPIO_PORT_A,
-       .pin = GPIO_PIN_3,
+      {.port = GPIOA,
+       .pin = 3,
        .mode = GPIO_MODE_ANALOG}, // IM_FB (OCP) - COMP2
 
-      {.port = GPIO_PORT_B,
-       .pin = GPIO_PIN_1,
+      {.port = GPIOB,
+       .pin = 1,
        .mode = GPIO_MODE_ANALOG}, // IA_ADC_NC (OPAMP3_VOUT) - ADC3_1
 
-      {.port = GPIO_PORT_B,
-       .pin = GPIO_PIN_11,
+      {.port = GPIOB,
+       .pin = 11,
        .mode = GPIO_MODE_ANALOG}, // IC_FB (OPAMP4_VINP + COMP6)
 
-      {.port = GPIO_PORT_B,
-       .pin = GPIO_PIN_12,
+      {.port = GPIOB,
+       .pin = 12,
        .mode = GPIO_MODE_ANALOG}, // IC_ADC_NC (OPAMP4_VOUT) - ADC4_3
 
-      {.port = GPIO_PORT_B,
-       .pin = GPIO_PIN_13,
+      {.port = GPIOB,
+       .pin = 13,
        .mode = GPIO_MODE_ANALOG}, // IA_FB (OPAMP3_VINP + COMP5)
 
-      {.port = GPIO_PORT_B,
-       .pin = GPIO_PIN_14,
+      {.port = GPIOB,
+       .pin = 14,
        .mode = GPIO_MODE_ANALOG}, // IB_FB - ADC5_3 + (OPAMP5_VINP + COMP7)
 
-      {.port = GPIO_PORT_C,
-       .pin = GPIO_PIN_0,
-       .mode = GPIO_MODE_ANALOG}, // TEMP_A - ADC2_6
+      {.port = GPIOC, .pin = 0, .mode = GPIO_MODE_ANALOG}, // TEMP_A - ADC2_6
 
-      {.port = GPIO_PORT_C,
-       .pin = GPIO_PIN_1,
-       .mode = GPIO_MODE_ANALOG}, // TEMP_B - ADC2_7
+      {.port = GPIOC, .pin = 1, .mode = GPIO_MODE_ANALOG}, // TEMP_B - ADC2_7
 
-      {.port = GPIO_PORT_C,
-       .pin = GPIO_PIN_2,
-       .mode = GPIO_MODE_ANALOG}, // TEMP_C - ADC2_8
+      {.port = GPIOC, .pin = 2, .mode = GPIO_MODE_ANALOG}, // TEMP_C - ADC2_8
 
-      {.port = GPIO_PORT_C,
-       .pin = GPIO_PIN_3,
-       .mode = GPIO_MODE_ANALOG}, // IM_FB - ADC1_9
+      {.port = GPIOC, .pin = 3, .mode = GPIO_MODE_ANALOG}, // IM_FB - ADC1_9
 
-      {.port = GPIO_PORT_C,
-       .pin = GPIO_PIN_4,
-       .mode = GPIO_MODE_ANALOG}, // TEMP_M - ADC2_5
+      {.port = GPIOC, .pin = 4, .mode = GPIO_MODE_ANALOG}, // TEMP_M - ADC2_5
 
-      {.port = GPIO_PORT_C,
-       .pin = GPIO_PIN_5,
-       .mode = GPIO_MODE_ANALOG}, // VL_MON - ADC2_11
+      {.port = GPIOC, .pin = 5, .mode = GPIO_MODE_ANALOG}, // VL_MON - ADC2_11
 
-      {.port = GPIO_PORT_E,
-       .pin = GPIO_PIN_7,
+      {.port = GPIOE,
+       .pin = 7,
        .mode = GPIO_MODE_ANALOG}, // VM_FB (OVLO) - COMP4_VINP
 
-      {.port = GPIO_PORT_E,
-       .pin = GPIO_PIN_8,
-       .mode = GPIO_MODE_ANALOG}, // VC_FB - ADC5_6
+      {.port = GPIOE, .pin = 8, .mode = GPIO_MODE_ANALOG}, // VC_FB - ADC5_6
 
-      {.port = GPIO_PORT_E,
-       .pin = GPIO_PIN_9,
-       .mode = GPIO_MODE_ANALOG}, // VA_FB - ADC3_IN2
+      {.port = GPIOE, .pin = 9, .mode = GPIO_MODE_ANALOG}, // VA_FB - ADC3_IN2
 
-      {.port = GPIO_PORT_E,
-       .pin = GPIO_PIN_11,
-       .mode = GPIO_MODE_ANALOG}, // VB_FB - ADC345_15
+      {.port = GPIOE, .pin = 11, .mode = GPIO_MODE_ANALOG}, // VB_FB - ADC345_15
 
   };
 
@@ -284,7 +263,7 @@ void board_adc_setup(void) {
 
   // Configure Analog Pins
   for (size_t i = 0; i < sizeof(analog_pins) / sizeof(analog_pins[0]); i++) {
-    gpio_pin_init(&analog_pins[i]);
+    hal_gpio_init(&analog_pins[i]);
   }
 
   board_opamp_setup();
@@ -367,8 +346,8 @@ void board_adc_setup(void) {
 void ADC1_IRQHandler(void) {
   if (ADC1->ISR & ADC_ISR_JEOS) {
     board_t *brd = board_get_handle();
-    gpio_pin_set(&brd->dio.test_pin0);
-    gpio_pin_clear(&brd->dio.test_pin0);
+    hal_gpio_set(&brd->dio.test_pin0);
+    hal_gpio_clear(&brd->dio.test_pin0);
     ADC1->ISR |= ADC_ISR_JEOS;
   }
 }
@@ -376,8 +355,8 @@ void ADC1_IRQHandler(void) {
 void ADC3_IRQHandler(void) {
   if (ADC3->ISR & ADC_ISR_JEOS) {
     board_t *brd = board_get_handle();
-    gpio_pin_set(&brd->dio.test_pin0);
-    gpio_pin_clear(&brd->dio.test_pin0);
+    hal_gpio_set(&brd->dio.test_pin0);
+    hal_gpio_clear(&brd->dio.test_pin0);
     ADC3->ISR |= ADC_ISR_JEOS;
   }
 }

@@ -1,8 +1,7 @@
 #ifndef STM32G4_ADC_H
 #define STM32G4_ADC_H
 
-#include "hal_analog.h"
-#include "stm32g4_common.h"
+#include "hal.h"
 
 #define ADC_REG_INPUT_MAX 16
 #define ADC_INJ_INPUT_MAX 4

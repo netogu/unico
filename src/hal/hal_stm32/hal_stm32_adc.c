@@ -23,8 +23,7 @@
  * SPDX-License-Identifier: MIT
  ******************************************************************************/
 
-#include "stm32g4_adc.h"
-#include "hal_analog.h"
+#include "hal_stm32_adc.h"
 
 static int adc_configure_input_sample_time(adc_t *self);
 static int adc_configure_regular_input_sequence(const adc_t *self);

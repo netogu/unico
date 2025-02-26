@@ -1,4 +1,4 @@
-#include "stm32g4_flash.h"
+#include "hal_stm32_flash.h"
 
 void flash_set_latency(uint32_t latency) {
   uint32_t reg = FLASH->ACR;

@@ -34,11 +34,11 @@ static void task_hmi_app(void *parameters) {
   (void)parameters;
 
   while (1) {
-    gpio_pin_toggle(&brd->dio.led_green);
+    hal_gpio_toggle(&brd->dio.led_green);
     // gpio_pin_toggle(&brd->io.led_red);
     // gpio_pin_toggle(&brd->io.led_blue);
-    gpio_pin_set(&brd->dio.led_blue);
-    gpio_pin_set(&brd->dio.led_red);
+    hal_gpio_set(&brd->dio.led_blue);
+    hal_gpio_set(&brd->dio.led_red);
 
     vTaskDelay(TASK_DELAY_HMI);
   }

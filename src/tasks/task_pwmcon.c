@@ -5,8 +5,9 @@
 //--------------------------------------------------------------------+
 #include "bsp.h"
 #include "hal.h"
+#include "hal_stm32_adc.h"
+#include "hal_stm32_cordic.h"
 #include "lib/motor_control.h"
-#include "stm32g4_adc.h"
 #include "tasklist.h"
 #include "taskmsg.h"
 
@@ -57,8 +58,7 @@ static void task_pwmcon_timer_callback() {
   // Calculate new PWM
   moc_foc_update(&foc);
   // Update PWM
-  pwm_3ph_set_duty(&brd->hw.mcpwm, foc.pwm.duty[0], foc.pwm.duty[1],
-                   foc.pwm.duty[2]);
+  hal_pwm_3ph_set_duty_f32(&brd->hw.mcpwm, foc.pwm.duty);
 }
 
 static void task_pwm_control(void *parameters) {

@@ -3,9 +3,9 @@
 //
 // -------------------------------------------------+
 
-#include "stm32g4_qenc.h"
-#include "stm32g4.h"
+#include "hal_stm32_qenc.h"
 #include "stm32g474xx.h"
+#include <stddef.h>
 
 int qenc_init(qenc_t *self) {
   if (self == NULL || self->timer == NULL) {
