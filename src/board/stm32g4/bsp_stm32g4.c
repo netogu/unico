@@ -2,6 +2,8 @@
 #include <stdint.h>
 
 #include "bsp.h"
+#include "hal.h"
+#include "hal_stm32_rcc.h"
 #include "log.h"
 #include "shell.h"
 
@@ -14,9 +16,9 @@ static board_t brd;
 // Error Handling
 //------------------------------------------------------+
 void HardFault_Handler(void) {
-  gpio_pin_clear(&brd.dio.led_blue);
-  gpio_pin_clear(&brd.dio.led_green);
-  gpio_pin_set(&brd.dio.led_red);
+  hal_gpio_clear(&brd.dio.led_blue);
+  hal_gpio_clear(&brd.dio.led_green);
+  hal_gpio_set(&brd.dio.led_red);
   __asm("BKPT #0\n");
 }
 
@@ -166,8 +168,8 @@ static void board_clock_setup() {
 
 static void board_dio_setup() {
 
-  for (size_t i = 0; i < sizeof(brd.dio) / sizeof(gpio_t); i++) {
-    gpio_pin_init((gpio_t *)&brd.dio + i);
+  for (size_t i = 0; i < sizeof(brd.dio) / sizeof(hal_gpio_t); i++) {
+    hal_gpio_init((hal_gpio_t *)&brd.dio + i);
   }
 }
 
@@ -177,25 +179,22 @@ static void board_dio_setup() {
 
 static void board_com_setup(void) {
 
-  brd.com.console =
-
-      (uart_t){
+  brd.com.console = (hal_uart_t){
 #if defined(BSP_G4_NUKLEO)
-          .instance = LPUART1,
+      .instance = LPUART1,
 #elif defined(BSP_MLB_revA)
-          .instance = USART1,
+      .port = USART1,
 #endif
-          .config =
-              (struct uart_config_s){
-                  .baudrate = 115200,
-                  .mode = UART_MODE_RX_TX,
-                  .word_length = UART_DATA_BITS_8,
-                  .stop_bits = UART_STOP_BITS_1,
-                  .parity = UART_PARITY_NONE,
-                  .flow_control = UART_FLOW_CONTROL_NONE,
-              },
+  };
 
-      };
+  const hal_uart_config_t uart_config = {
+      .baudrate = 115200,
+      .mode = UART_MODE_RX_TX,
+      .word_length = UART_DATA_BITS_8,
+      .stop_bits = UART_STOP_BITS_1,
+      .parity = UART_PARITY_NONE,
+      .flow_control = UART_FLOW_CONTROL_NONE,
+  };
 
-  uart_init_dma(&brd.com.console);
+  hal_uart_init_dma(&brd.com.console, &uart_config);
 }

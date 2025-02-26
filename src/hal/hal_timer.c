@@ -1,5 +1,5 @@
-#include "hal_timer.h"
-#include "stm32g4.h"
+#include "hal.h"
+#include "stm32g474xx.h"
 
 #define HAL_TIMER_MAX_INSTANCES 2
 #define HAL_TIMER_INTERRUPT_PRIORITY 1

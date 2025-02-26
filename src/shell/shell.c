@@ -1,6 +1,7 @@
 #include "shell.h"
 #include "bsp.h"
 #include "hal.h"
+#include "hal_stm32_cordic.h"
 #include "rtos.h"
 #include "taskmsg.h"
 #include "tusb.h"
@@ -241,10 +242,10 @@ static void drv_en_callback(struct ush_object *self,
   // arguments validation
   if (strcmp(argv[1], "1") == 0) {
     // turn gate driver on
-    gpio_pin_set(&brd->dio.motor_en);
+    hal_gpio_set(&brd->dio.motor_en);
   } else if (strcmp(argv[1], "0") == 0) {
     // turn gate driver off
-    gpio_pin_clear(&brd->dio.motor_en);
+    hal_gpio_clear(&brd->dio.motor_en);
   } else {
     // return predefined error message
     ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
@@ -272,10 +273,10 @@ static void mpwr_en_callback(struct ush_object *self,
   // arguments validation
   if (strcmp(argv[1], "1") == 0) {
     // turn gate driver on
-    gpio_pin_set(&brd->dio.mpwr_en);
+    hal_gpio_set(&brd->dio.mpwr_en);
   } else if (strcmp(argv[1], "0") == 0) {
     // turn VM efuse driver off
-    gpio_pin_clear(&brd->dio.mpwr_en);
+    hal_gpio_clear(&brd->dio.mpwr_en);
   } else {
     // return predefined error message
     ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
@@ -319,7 +320,7 @@ static void dpt_exec_callback(struct ush_object *self,
   (void)self; // unused
   (void)file; // unused
 
-  board_t *brd = board_get_handle();
+  // board_t *brd = board_get_handle();
 
   // arguments count validation
   if (argc < 3) {
@@ -328,7 +329,7 @@ static void dpt_exec_callback(struct ush_object *self,
     return;
   }
 
-  pwm_t *pwm = &brd->hw.mcpwm.pwma;
+  // hal_pwm_t *pwm = &brd->hw.mcpwm.pwm[0];
 
   int ton = atoi(argv[1]);
   ush_printf(self, "ton: %d ns\r\n", ton);
@@ -353,10 +354,10 @@ static void dpt_exec_callback(struct ush_object *self,
   ton < 0 ? ton = 0 : ton;
   toff < 0 ? toff = 0 : toff;
 
-  pwm_set_frequency(pwm, 1000000000 / (ton + toff));
-  pwm_set_duty(pwm, ton * 100 / (ton + toff));
-  pwm_set_n_cycle_run(pwm, n);
-  pwm_start(pwm);
+  // hal_pwm_set_frequency(pwm, 1000000000 / (ton + toff));
+  // hal_pwm_set_duty(pwm, ton * 100 / (ton + toff));
+  // hal_pwm_set_n_cycle_run(pwm, n);
+  // hal_pwm_start(pwm);
 }
 
 static void _print_pwmcon_msg(struct ush_object *self, pwmcon_msg_t *msg) {

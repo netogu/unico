@@ -1,13 +1,9 @@
 #ifndef STM32G4_COMMON_H
 #define STM32G4_COMMON_H
 
-#include "tiny_printf.h"
+#include "stm32g4xx.h"
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
-#include <string.h>
-
-#include "stm32g4xx.h"
 
 #define Set_Bit SET_BIT
 

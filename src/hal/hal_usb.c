@@ -1,5 +1,6 @@
 #include "bsp.h"
 #include "hal.h"
+#include "tiny_printf.h"
 #include "tusb.h"
 
 #define USB_STR_SERIALNO_LEN 8

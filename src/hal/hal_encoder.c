@@ -2,7 +2,7 @@
 /* Encoders                                         */
 /*--------------------------------------------------*/
 
-#include "hal_encoder.h"
+#include "hal.h"
 #include <stdint.h>
 #include <string.h>
 

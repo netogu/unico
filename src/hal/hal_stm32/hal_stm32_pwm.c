@@ -1,5 +1,6 @@
 
-#include "stm32g4_pwm.h"
+#include "hal_stm32_pwm.h"
+#include "hal.h"
 
 static void _hrtim1_init(void) {
 
@@ -17,12 +18,11 @@ static void _hrtim1_init(void) {
   }
 }
 
-static int _pwm_enable_outputs(pwm_t *self) {
+static int _pwm_enable_outputs(hal_pwm_t *self) {
 
-  enum pwm_timer_e pwm_timer = self->options.pwm_timer;
-  uint16_t pwm_channel = self->options.pwm_channel;
+  uint16_t pwm_channel = self->channel;
 
-  if (pwm_timer == PWM_TIMER_HRTIM1) {
+  if (self->regs == HRTIM1) {
     // Enable outputs
     HRTIM1->sCommonRegs.OENR |= 1 << (HRTIM_OENR_TA1OEN_Pos + 2 * pwm_channel);
     HRTIM1->sCommonRegs.OENR |= 1 << (HRTIM_OENR_TA2OEN_Pos + 2 * pwm_channel);
@@ -31,12 +31,11 @@ static int _pwm_enable_outputs(pwm_t *self) {
   return 0;
 }
 
-int pwm_set_frequency(pwm_t *self, uint32_t freq_hz) {
+int hal_pwm_set_frequency(hal_pwm_t *self, uint32_t freq_hz) {
 
-  enum pwm_timer_e pwm_timer = self->options.pwm_timer;
-  uint16_t pwm_channel = self->options.pwm_channel;
+  uint16_t pwm_channel = self->channel;
 
-  if (pwm_timer == PWM_TIMER_HRTIM1) {
+  if (self->regs == HRTIM1) {
     uint32_t prescale =
         HRTIM1->sTimerxRegs[pwm_channel].TIMxCR & HRTIM_TIMCR_CK_PSC;
     HRTIM1->sTimerxRegs[pwm_channel].PERxR =
@@ -53,12 +52,11 @@ int pwm_set_frequency(pwm_t *self, uint32_t freq_hz) {
  * @return int      0 on success
  */
 
-int pwm_set_duty(pwm_t *self, float duty_u) {
+int hal_pwm_set_duty_f32(hal_pwm_t *self, float duty_u) {
 
-  enum pwm_timer_e pwm_timer = self->options.pwm_timer;
-  uint16_t pwm_channel = self->options.pwm_channel;
+  uint16_t pwm_channel = self->channel;
 
-  if (pwm_timer == PWM_TIMER_HRTIM1) {
+  if (self->regs == HRTIM1) {
     const float duty_max = 0.98;
     const float duty_min = 0.02;
 
@@ -85,12 +83,11 @@ int pwm_set_duty(pwm_t *self, float duty_u) {
   return 0;
 }
 
-int pwm_swap_output(pwm_t *self) {
+int hal_pwm_swap_output(hal_pwm_t *self) {
 
-  enum pwm_timer_e pwm_timer = self->options.pwm_timer;
-  uint16_t pwm_channel = self->options.pwm_channel;
+  uint16_t pwm_channel = self->channel;
 
-  if (pwm_timer == PWM_TIMER_HRTIM1) {
+  if (self->regs == HRTIM1) {
     // Swap PWM outputs
     HRTIM1->sCommonRegs.CR2 |= (1 << (HRTIM_CR2_SWPA_Pos + pwm_channel));
     // Update registers
@@ -99,13 +96,12 @@ int pwm_swap_output(pwm_t *self) {
   return 0;
 }
 
-int pwm_enable_fault_input(pwm_t *self, uint32_t fault) {
+int hal_pwm_enable_fault_input(hal_pwm_t *self, uint32_t fault) {
   (void)fault;
 
-  enum pwm_timer_e pwm_timer = self->options.pwm_timer;
-  uint16_t pwm_channel = self->options.pwm_channel;
+  uint16_t pwm_channel = self->channel;
 
-  if (pwm_timer == PWM_TIMER_HRTIM1) {
+  if (self->regs == HRTIM1) {
 
     HRTIM_Timerx_TypeDef *tim_regs = &HRTIM1->sTimerxRegs[pwm_channel];
 
@@ -142,12 +138,11 @@ int pwm_enable_fault_input(pwm_t *self, uint32_t fault) {
   return 0;
 }
 
-int pwm_init(pwm_t *self, uint32_t freq_hz, uint32_t dt_ns) {
+int hal_pwm_init(hal_pwm_t *self, uint32_t freq_hz, uint32_t dt_ns) {
 
-  enum pwm_timer_e pwm_timer = self->options.pwm_timer;
-  uint16_t pwm_channel = self->options.pwm_channel;
+  uint16_t pwm_channel = self->channel;
 
-  if (pwm_timer == PWM_TIMER_HRTIM1) {
+  if (self->regs == HRTIM1) {
 
     _hrtim1_init();
 
@@ -228,12 +223,11 @@ int pwm_init(pwm_t *self, uint32_t freq_hz, uint32_t dt_ns) {
   return 0;
 }
 
-int pwm_start(pwm_t *self) {
+int hal_pwm_start(hal_pwm_t *self) {
 
-  enum pwm_timer_e pwm_timer = self->options.pwm_timer;
-  uint16_t pwm_channel = self->options.pwm_channel;
+  uint16_t pwm_channel = self->channel;
 
-  if (pwm_timer == PWM_TIMER_HRTIM1) {
+  if (self->regs == HRTIM1) {
     // Enable Outputs
     _pwm_enable_outputs(self);
     // Start Timer
@@ -243,21 +237,20 @@ int pwm_start(pwm_t *self) {
   return 0;
 }
 
-int pwm_stop(pwm_t *self) {
+int hal_pwm_stop(hal_pwm_t *self) {
 
-  enum pwm_timer_e pwm_timer = self->options.pwm_timer;
-  uint16_t pwm_channel = self->options.pwm_channel;
+  uint16_t pwm_channel = self->channel;
 
-  if (pwm_timer == PWM_TIMER_HRTIM1) {
+  if (self->regs == HRTIM1) {
     HRTIM1->sMasterRegs.MCR &= ~(HRTIM_MCR_TACEN + pwm_channel);
   }
 
   return 0;
 }
 
-int pwm_enable_period_interrupt(pwm_t *self) {
+int hal_stm32_pwm_enable_period_interrupt(hal_pwm_t *self) {
 
-  uint16_t pwm_channel = self->options.pwm_channel;
+  uint16_t pwm_channel = self->channel;
   HRTIM_Timerx_TypeDef *tim_regs = &HRTIM1->sTimerxRegs[pwm_channel];
   tim_regs->TIMxDIER |= HRTIM_TIMDIER_RSTIE;
 
@@ -287,17 +280,16 @@ int pwm_enable_period_interrupt(pwm_t *self) {
   return 0;
 }
 
-int pwm_set_n_cycle_run(pwm_t *self, uint32_t cycles) {
+int hal_pwm_set_n_cycle_run(hal_pwm_t *self, uint32_t cycles) {
 
-  enum pwm_timer_e pwm_timer = self->options.pwm_timer;
-  uint16_t pwm_channel = self->options.pwm_channel;
+  uint16_t pwm_channel = self->channel;
 
-  if (pwm_timer == PWM_TIMER_HRTIM1) {
+  if (self->regs == HRTIM1) {
 
     HRTIM_Timerx_TypeDef *tim_regs = &HRTIM1->sTimerxRegs[pwm_channel];
 
     // Reset Timer
-    pwm_stop(self);
+    hal_pwm_stop(self);
 
     // Set PWM to Continuous mode
     tim_regs->TIMxCR |= HRTIM_TIMCR_CONT;
@@ -338,14 +330,13 @@ int pwm_set_n_cycle_run(pwm_t *self, uint32_t cycles) {
   return 0;
 }
 
-int pwm_enable_adc_trigger(pwm_t *self) {
+int hal_stm32_pwm_enable_adc_trigger(hal_pwm_t *self) {
 
-  enum pwm_timer_e pwm_timer = self->options.pwm_timer;
-  uint16_t pwm_channel = self->options.pwm_channel;
-
-  if (pwm_timer != PWM_TIMER_HRTIM1) {
+  if (self->regs != HRTIM1) {
     return -1;
   }
+
+  uint16_t pwm_channel = self->channel;
 
   switch (pwm_channel) {
   case PWM_HRTIM_TIM_A:
@@ -370,72 +361,60 @@ int pwm_enable_adc_trigger(pwm_t *self) {
   return 0;
 }
 
-int pwm_3ph_init(pwm_3ph_t *self, uint32_t freq_hz, uint32_t dt_ns) {
+int hal_pwm_3ph_init(hal_pwm_3ph_t *self, uint32_t freq_hz, uint32_t dt_ns) {
 
-  pwm_t *pwms[3] = {&self->pwma, &self->pwmb, &self->pwmc};
-
-  if (self->mode == PWM_3PHASE_MODE_6PWM) {
-
-    for (size_t i = 0; i < sizeof(pwms) / sizeof(pwms[0]); i++) {
-
-      pwm_init(pwms[i], freq_hz, dt_ns);
-    }
-
-  } else if (self->mode == PWM_3PHASE_MODE_3PWM) {
-    // TODO implement 3 PWM mode
-  } else {
-    // Invalid 3-phase mode
-    return -1;
+  for (int i = 0; i < 3; i++) {
+    hal_pwm_init(&self->pwm[i], freq_hz, dt_ns);
   }
+
   return 0;
 }
 
-int pwm_3ph_start(pwm_3ph_t *self) {
+int hal_pwm_3ph_start(hal_pwm_3ph_t *self) {
 
-  pwm_t *pwms[3] = {&self->pwma, &self->pwmb, &self->pwmc};
+  uint32_t mcr_reg = HRTIM1->sMasterRegs.MCR;
 
-  uint32_t mcr_reg = 0;
-  for (size_t i = 0; i < sizeof(pwms) / sizeof(pwms[0]); i++) {
-    _pwm_enable_outputs(pwms[i]);
-    mcr_reg |= 1 << (HRTIM_MCR_TACEN_Pos + pwms[i]->options.pwm_channel);
+  for (int i = 0; i < 3; i++) {
+    _pwm_enable_outputs(&self->pwm[i]);
+    mcr_reg |= 1 << (HRTIM_MCR_TACEN_Pos + self->pwm[i].channel);
   }
+
   // Start Timer
   HRTIM1->sMasterRegs.MCR |= mcr_reg;
 
   return 0;
 }
 
-int pwm_3ph_stop(pwm_3ph_t *self) {
-
-  pwm_t *pwms[3] = {&self->pwma, &self->pwmb, &self->pwmc};
+int hal_pwm_3ph_stop(hal_pwm_3ph_t *self) {
 
   uint32_t mcr_reg = HRTIM1->sMasterRegs.MCR;
-  for (size_t i = 0; i < sizeof(pwms) / sizeof(pwms[0]); i++) {
-    pwm_stop(pwms[i]);
-    mcr_reg &= ~(HRTIM_MCR_TACEN + pwms[i]->options.pwm_channel);
+
+  for (int i = 0; i < 3; i++) {
+    hal_pwm_stop(&self->pwm[i]);
+    mcr_reg &= ~(HRTIM_MCR_TACEN + self->pwm[i].channel);
   }
+
   HRTIM1->sMasterRegs.MCR = mcr_reg;
 
   return 0;
 }
 
-int pwm_3ph_set_frequency(pwm_3ph_t *self, uint32_t freq_hz) {
+int hal_pwm_3ph_set_frequency(hal_pwm_3ph_t *self, uint32_t freq_hz) {
 
-  pwm_t *pwms[3] = {&self->pwma, &self->pwmb, &self->pwmc};
-
-  for (size_t i = 0; i < sizeof(pwms) / sizeof(pwms[0]); i++) {
-    pwm_set_frequency(pwms[i], freq_hz);
+  for (int i = 0; i < 3; i++) {
+    hal_pwm_set_frequency(&self->pwm[i], freq_hz);
   }
 
   return 0;
 }
 
-int pwm_3ph_set_duty(pwm_3ph_t *self, float d1_u, float d2_u, float d3_u) {
+int hal_pwm_3ph_set_duty_f32(hal_pwm_3ph_t *self, float duty_abc[]) {
 
-  // TODO: disable updates and renable after duty change
-  pwm_set_duty(&self->pwma, d1_u);
-  pwm_set_duty(&self->pwmb, d2_u);
-  pwm_set_duty(&self->pwmc, d3_u);
+  (void)self;
+
+  for (int i = 0; i < 3; i++) {
+    hal_pwm_set_duty_f32(&self->pwm[i], duty_abc[i]);
+  }
 
   return 0;
 }

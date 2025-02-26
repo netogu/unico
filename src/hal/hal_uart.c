@@ -1,14 +1,15 @@
 #include "bsp.h"
 #include "hal.h"
+#include "string.h"
 
 #define NOCHAR '\0'
 
 static StaticSemaphore_t uart_mutex_buffer;
 SemaphoreHandle_t uart_mutex;
 
-static uart_t *serial_port = NULL;
+static hal_uart_t *serial_port = NULL;
 
-int cli_uart_init(uart_t *port) {
+int cli_uart_init(hal_uart_t *port) {
 
   uart_mutex = xSemaphoreCreateMutexStatic(&uart_mutex_buffer);
   if (uart_mutex == NULL) {
@@ -26,7 +27,7 @@ int cli_uart_putc(char tx_char) {
 
   int status = 0;
   if (xSemaphoreTake(uart_mutex, 10) == pdTRUE) {
-    status = uart_write(serial_port, (uint8_t *)&tx_char, 1);
+    status = hal_uart_write(serial_port, (uint8_t *)&tx_char, 1);
     xSemaphoreGive(uart_mutex);
   }
   return status;
@@ -36,7 +37,7 @@ int cli_uart_puts(const char *str) {
   int status = 0;
   if (xSemaphoreTake(uart_mutex, 10) == pdTRUE) {
     size_t len = strlen(str);
-    status = uart_write(serial_port, (uint8_t *)str, len);
+    status = hal_uart_write(serial_port, (uint8_t *)str, len);
     xSemaphoreGive(uart_mutex);
   }
   return status;
@@ -65,14 +66,14 @@ char cli_uart_getc(void) {
   int status = 0;
   char readchar = NOCHAR;
   if (xSemaphoreTake(uart_mutex, 10) == pdTRUE) {
-    status = uart_read(serial_port, (uint8_t *)&readchar, 1);
+    status = hal_uart_read(serial_port, (uint8_t *)&readchar, 1);
     (void)status;
     xSemaphoreGive(uart_mutex);
   }
   return readchar;
 }
 
-uint32_t cli_uart_tx_pending(uart_t *port) {
+uint32_t cli_uart_tx_pending(hal_uart_t *port) {
   // return serial_port->tx_fifo.size;
   uint32_t size = 0;
 

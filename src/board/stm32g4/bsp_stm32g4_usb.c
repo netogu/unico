@@ -25,6 +25,7 @@
 
 // #include "bsp/board_api.h"
 #include "hal.h"
+#include "hal_stm32_usbpcd.h"
 #include "log.h"
 #include "tusb.h"
 

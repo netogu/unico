@@ -1,7 +1,7 @@
 #ifndef STM32G4_RCC_H
 #define STM32G4_RCC_H
 
-#include "stm32g4_common.h"
+#include "stm32g4xx.h"
 
 enum rcc_clk_scales {
   RCC_CLK_DIV1,

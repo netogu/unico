@@ -6,7 +6,6 @@ File   : bsp.h
 #pragma once
 
 #include "hal.h"
-#include "stm32g4.h"
 
 //------------------------------------------------------+
 // Board Variant
@@ -29,60 +28,60 @@ typedef struct board_s {
 
   struct board_dio_s {
     /*// Indicators*/
-    gpio_t led_red;
-    gpio_t led_green;
-    gpio_t led_blue;
+    hal_gpio_t led_red;
+    hal_gpio_t led_green;
+    hal_gpio_t led_blue;
 
     // Motor Drive Control
-    gpio_t mpwr_en;
-    gpio_t flt_mwr_n;
-    gpio_t flt_drv_n;
-    gpio_t motor_en;
-    gpio_t sto_a_n;
-    gpio_t sto_b_n;
-    gpio_t mc_status;
-    gpio_t mc_error_n;
+    hal_gpio_t mpwr_en;
+    hal_gpio_t flt_mwr_n;
+    hal_gpio_t flt_drv_n;
+    hal_gpio_t motor_en;
+    hal_gpio_t sto_a_n;
+    hal_gpio_t sto_b_n;
+    hal_gpio_t mc_status;
+    hal_gpio_t mc_error_n;
 
     // Motor PWMs
-    gpio_t pwm_ah;
-    gpio_t pwm_al;
-    gpio_t pwm_bh;
-    gpio_t pwm_bl;
-    gpio_t pwm_ch;
-    gpio_t pwm_cl;
+    hal_gpio_t pwm_ah;
+    hal_gpio_t pwm_al;
+    hal_gpio_t pwm_bh;
+    hal_gpio_t pwm_bl;
+    hal_gpio_t pwm_ch;
+    hal_gpio_t pwm_cl;
 
     // Misc
-    gpio_t tc_pwr_en;
-    gpio_t enc_a_pin;
-    gpio_t enc_b_pin;
-    gpio_t test_pin0;
+    hal_gpio_t tc_pwr_en;
+    hal_gpio_t enc_a_pin;
+    hal_gpio_t enc_b_pin;
+    hal_gpio_t test_pin0;
 
     // SPI1
-    gpio_t spi1_mosi;
-    gpio_t spi1_miso;
-    gpio_t spi1_clk;
-    gpio_t spi1_cs_n;
+    hal_gpio_t spi1_mosi;
+    hal_gpio_t spi1_miso;
+    hal_gpio_t spi1_clk;
+    hal_gpio_t spi1_cs_n;
 
     // SPI2
-    gpio_t spi2_mosi;
-    gpio_t spi2_miso;
-    gpio_t spi2_clk;
-    gpio_t spi2_cs_n;
+    hal_gpio_t spi2_mosi;
+    hal_gpio_t spi2_miso;
+    hal_gpio_t spi2_clk;
+    hal_gpio_t spi2_cs_n;
 
     // SPI4
-    gpio_t spi4_mosi;
-    gpio_t spi4_miso;
-    gpio_t spi4_clk;
-    gpio_t spi4_men_cs_n;
-    gpio_t spi4_oen_cs_n;
+    hal_gpio_t spi4_mosi;
+    hal_gpio_t spi4_miso;
+    hal_gpio_t spi4_clk;
+    hal_gpio_t spi4_men_cs_n;
+    hal_gpio_t spi4_oen_cs_n;
 
     // UART Console
-    gpio_t console_tx;
-    gpio_t console_rx;
+    hal_gpio_t console_tx;
+    hal_gpio_t console_rx;
 
     // USB
-    gpio_t usb_dp;
-    gpio_t usb_dm;
+    hal_gpio_t usb_dp;
+    hal_gpio_t usb_dm;
 
   } dio;
 
@@ -108,12 +107,12 @@ typedef struct board_s {
   } ai;
 
   struct board_hw_t {
-    pwm_3ph_t mcpwm;
+    hal_pwm_3ph_t mcpwm;
     hal_encoder_t encoder;
   } hw;
 
   struct board_com_t {
-    uart_t console;
+    hal_uart_t console;
   } com;
 
 } board_t;

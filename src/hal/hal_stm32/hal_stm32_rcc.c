@@ -1,6 +1,6 @@
-#include "stm32g4_rcc.h"
-#include "stm32g4_flash.h"
-#include "stm32g4_pwr.h"
+#include "hal_stm32_rcc.h"
+#include "hal_stm32_flash.h"
+#include "hal_stm32_pwr.h"
 
 enum rcc_oscs {
   RCC_OSC_HSI,
@@ -253,7 +253,7 @@ void rcc_clock_init(rcc_clock_config_t *cfg) {
 }
 
 void rcc_crs_init(rcc_crs_config_t *cfg) {
-  
+
   // Enable CRS peripheral clock
   RCC->APB1ENR1 |= RCC_APB1ENR1_CRSEN;
 
