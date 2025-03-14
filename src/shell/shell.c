@@ -8,7 +8,7 @@
 #include "uclib.h"
 
 #define NOCHAR '\0'
-#define SHELL_HOSTNAME "board"
+#define SHELL_HOSTNAME "motor"
 
 extern void shell_cmd_top_exec_cb(struct ush_object *self,
                                   struct ush_file_descriptor const *file,
@@ -120,8 +120,7 @@ static void adc_test_read_callback(struct ush_object *self,
   uint32_t enc_data = 0;
   int32_t angle_q31 = 0;
   hal_analog_input_t enc_raw = {.name = "enc", .data = &enc_data};
-  hal_analog_input_t angle = {
-      .name = "angle", .data = (uint32_t *)&angle_q31, .units = "rad"};
+  hal_analog_input_t angle = {.name = "angle", .data = (uint32_t *)&angle_q31};
 
   struct measurement adc_list[13];
   adc_list[0] = (struct measurement){.ain = brd->ai.ia_fb, .type = F32};
@@ -406,6 +405,16 @@ static void foc_cmd_cb(struct ush_object *self,
       msg.mode = atoi(argv[current_arg + 1]);
       msg_updated = true;
       current_arg += 2;
+    } else if (strcmp(argv[current_arg], "phaselock") == 0) {
+      msg.vd_mv = atoi(argv[current_arg + 1]);
+      msg.mode = 3;
+      task_pwmcon_msg_send(msg);
+      vTaskDelay(500);
+      hal_encoder_set_offset(&brd->hw.encoder, 0);
+      msg.vd_mv = 0;
+      msg.mode = 0;
+      task_pwmcon_msg_send(msg);
+      current_arg += 2;
     } else {
       ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
       return;
@@ -416,7 +425,7 @@ static void foc_cmd_cb(struct ush_object *self,
     _print_pwmcon_msg(self, &msg);
     task_pwmcon_msg_send(msg);
   } else {
-    ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+    // ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
   }
 
   return;

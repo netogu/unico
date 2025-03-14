@@ -10,7 +10,7 @@ void uclib_ftoa(float f32, char *s, int decimal_places) {
     *s++ = '-';
     f32 = -f32; // Convert to positive
   } else {
-    *s++ = '+';
+    *s++ = ' ';
   }
 
   // Round the number correctly
