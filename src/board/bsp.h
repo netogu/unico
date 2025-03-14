@@ -1,9 +1,10 @@
+#ifndef __BSP_H
+#define __BSP_H
+
 /*--------------------------------------------------------------------------
 Board Support Package
 File   : bsp.h
 --------------------------------------------------------------------------*/
-
-#pragma once
 
 #include "hal.h"
 
@@ -21,9 +22,6 @@ File   : bsp.h
 #define SHELL_INTERFACE_USB
 /*#define SHELL_INTERFACE_UART*/
 
-//------------------------------------------------------
-// GPIOs
-//------------------------------------------------------
 typedef struct board_s {
 
   struct board_dio_s {
@@ -42,8 +40,8 @@ typedef struct board_s {
     hal_gpio_t mc_status;
     hal_gpio_t mc_error_n;
 
-    // Motor PWMs
     hal_gpio_t pwm_ah;
+    // Motor PWMs
     hal_gpio_t pwm_al;
     hal_gpio_t pwm_bh;
     hal_gpio_t pwm_bl;
@@ -124,3 +122,5 @@ void board_hw_setup(void);
 int board_load_pinmap(board_t *self);
 
 int board_start_bootloader(board_t *self);
+
+#endif // __BSP_H
