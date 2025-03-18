@@ -167,7 +167,7 @@ static void adc_test_read_callback(struct ush_object *self,
 
       if (adc_list[i].type == F32) {
         char str_val[16];
-        float value_f32 = hal_analog_read_f32(&adc_list[i].ain);
+        float value_f32 = hal_analog_read(&adc_list[i].ain);
         uclib_ftoa(value_f32, str_val, 2);
         cli_printf("%s=%s%s ", adc_list[i].ain.name, str_val,
                    adc_list[i].ain.units);
