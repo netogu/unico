@@ -1,11 +1,25 @@
 
 #include "hal.h"
 
-inline uint32_t hal_analog_read_raw(hal_analog_input_t *self) {
-  return *self->data;
+static inline uint32_t hal_analog_read_u32(void *self) {
+  hal_analog_input_t *s = (hal_analog_input_t *)self;
+
+  return *s->data;
 }
 
-inline float hal_analog_read_f32(hal_analog_input_t *self) {
-  float value = *self->data * self->scale + self->offset;
+static inline float hal_analog_read_f32(void *self) {
+  hal_analog_input_t *s = (hal_analog_input_t *)self;
+  float value = *s->data * s->scale + s->offset;
   return value;
+}
+
+int hal_analog_input_init(hal_analog_input_t *self) {
+  if (!self) {
+    return -1;
+  }
+
+  self->read_f32 = &hal_analog_read_f32;
+  self->read_u32 = &hal_analog_read_u32;
+
+  return 0;
 }

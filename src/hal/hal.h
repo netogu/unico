@@ -17,10 +17,15 @@ typedef struct {
   float offset;
   char *units;
   volatile uint32_t *data;
+  float (*read_f32)(void *self);
+  uint32_t (*read_u32)(void *self);
 } hal_analog_input_t;
 
-uint32_t hal_analog_read_raw(hal_analog_input_t *self);
-float hal_analog_read_f32(hal_analog_input_t *self);
+int hal_analog_input_init(hal_analog_input_t *self);
+
+inline float hal_analog_read(hal_analog_input_t *self) {
+  return self->read_f32(self);
+}
 
 /*--------------------------------------------------*/
 //  Encoders
