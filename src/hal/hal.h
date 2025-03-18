@@ -27,6 +27,10 @@ inline float hal_analog_read(hal_analog_input_t *self) {
   return self->read_f32(self);
 }
 
+inline uint32_t hal_analog_read_raw(hal_analog_input_t *self) {
+  return self->read_u32(self);
+}
+
 /*--------------------------------------------------*/
 //  Encoders
 /*--------------------------------------------------*/
