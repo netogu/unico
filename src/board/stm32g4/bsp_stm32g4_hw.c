@@ -125,3 +125,42 @@ void board_encoder_setup(void) {
   qenc_init(&menc_abz);
   hal_encoder_init(&brd->hw.encoder, menc_ops);
 }
+
+//------------------------------------------------------
+// NTCs
+//------------------------------------------------------
+
+void board_ntc_setup(void) {
+  board_t *brd = board_get_handle();
+  brd->hw.ntc_phase_a = (sensor_ntc_t){.B = 3380.0f,
+                                       .rth_25C = 10e3,
+                                       .rs = 10e3,
+                                       .rcmc = 0.0f,
+                                       .vs = 3.3,
+                                       .config = NTC_CONFIG_BOT,
+                                       .analog_input = &brd->ai.temp_a};
+
+  brd->hw.ntc_phase_b = (sensor_ntc_t){.B = 3380.0f,
+                                       .rth_25C = 10e3,
+                                       .rs = 10e3,
+                                       .rcmc = 0.0f,
+                                       .vs = 3.3,
+                                       .config = NTC_CONFIG_BOT,
+                                       .analog_input = &brd->ai.temp_b};
+
+  brd->hw.ntc_phase_c = (sensor_ntc_t){.B = 3380.0f,
+                                       .rth_25C = 10e3,
+                                       .rs = 10e3,
+                                       .rcmc = 0.0f,
+                                       .vs = 3.3,
+                                       .config = NTC_CONFIG_BOT,
+                                       .analog_input = &brd->ai.temp_c};
+
+  brd->hw.ntc_motor = (sensor_ntc_t){.B = 3380.0f,
+                                     .rth_25C = 10e3,
+                                     .rs = 1e3,
+                                     .rcmc = 100.0f,
+                                     .vs = 3.3,
+                                     .config = NTC_CONFIG_BOT,
+                                     .analog_input = &brd->ai.temp_m};
+}
