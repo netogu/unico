@@ -281,8 +281,8 @@ void board_adc_setup(void) {
   adc_register_input(&adc2, &brd->ai.temp_b, 'i', ADC_SAMPLE_247_5_CYCLES);
   adc_register_input(&adc2, &brd->ai.temp_a, 'i', ADC_SAMPLE_247_5_CYCLES);
   adc_register_input(&adc2, &brd->ai.temp_c, 'i', ADC_SAMPLE_247_5_CYCLES);
-  adc_register_input(&adc2, &brd->ai.vl_mon, 'i', ADC_SAMPLE_247_5_CYCLES);
-  // adc_register_input(&adc2, &brd->ai.temp_m, 'i', ADC_SAMPLE_247_5_CYCLES);
+  // adc_register_input(&adc2, &brd->ai.vl_mon, 'i', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc2, &brd->ai.temp_m, 'i', ADC_SAMPLE_247_5_CYCLES);
 
   adc_register_input(&adc3, &brd->ai.ia_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
   adc_register_input(&adc3, &brd->ai.va_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
