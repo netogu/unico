@@ -1,4 +1,5 @@
 #include "bsp.h"
+#include "hal.h"
 #include "hal_stm32_adc.h"
 #include "log.h"
 #include "stm32g4xx.h"
@@ -264,6 +265,12 @@ void board_adc_setup(void) {
   // Configure Analog Pins
   for (size_t i = 0; i < sizeof(analog_pins) / sizeof(analog_pins[0]); i++) {
     hal_gpio_init(&analog_pins[i]);
+  }
+
+  // Init Analog Analog Inputs
+  hal_analog_input_t *ain_ptr = (hal_analog_input_t *)&brd->ai;
+  for (size_t i = 0; i < sizeof(brd->ai) / sizeof(hal_analog_input_t); i++) {
+    hal_analog_input_init(&ain_ptr[i]);
   }
 
   board_opamp_setup();
