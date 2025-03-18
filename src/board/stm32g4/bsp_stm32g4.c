@@ -50,6 +50,7 @@ extern void board_pwm_setup(void);
 extern void board_spi_setup(void);
 extern void board_gate_driver_setup(void);
 extern void board_usb_setup(void);
+extern void board_ntc_setup(void);
 
 int board_init(void) {
 
@@ -73,6 +74,7 @@ void board_hw_setup(void) {
   board_usb_setup();
   board_pwm_setup();
   board_adc_setup();
+  board_ntc_setup();
   board_encoder_setup();
 }
 

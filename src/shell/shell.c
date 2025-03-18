@@ -3,6 +3,7 @@
 #include "hal.h"
 #include "hal_stm32_cordic.h"
 #include "rtos.h"
+#include "sensors/sensor_ntc.h"
 #include "taskmsg.h"
 #include "tusb.h"
 #include "uclib.h"
@@ -134,6 +135,7 @@ static void adc_test_read_callback(struct ush_object *self,
   adc_list[8] = (struct measurement){.ain = brd->ai.temp_a, .type = F32};
   adc_list[9] = (struct measurement){.ain = brd->ai.temp_b, .type = F32};
   adc_list[10] = (struct measurement){.ain = brd->ai.temp_c, .type = F32};
+  adc_list[10] = (struct measurement){.ain = brd->ai.temp_m, .type = F32};
   adc_list[11] = (struct measurement){.ain = enc_raw, .type = INT32};
   adc_list[12] = (struct measurement){.ain = angle, .type = Q31};
 
@@ -167,7 +169,18 @@ static void adc_test_read_callback(struct ush_object *self,
 
       if (adc_list[i].type == F32) {
         char str_val[16];
-        float value_f32 = hal_analog_read_f32(&adc_list[i].ain);
+        float value_f32 = 0.0f;
+        if (strcmp(adc_list[i].ain.name, "ta") == 0) {
+          value_f32 = sensor_ntc_read_f32(&brd->hw.ntc_phase_a);
+        } else if (strcmp(adc_list[i].ain.name, "tb") == 0) {
+          value_f32 = sensor_ntc_read_f32(&brd->hw.ntc_phase_a);
+        } else if (strcmp(adc_list[i].ain.name, "tc") == 0) {
+          value_f32 = sensor_ntc_read_f32(&brd->hw.ntc_phase_a);
+        } else if (strcmp(adc_list[i].ain.name, "tm") == 0) {
+          value_f32 = sensor_ntc_read_f32(&brd->hw.ntc_motor);
+        } else {
+          value_f32 = hal_analog_read_f32(&adc_list[i].ain);
+        }
         uclib_ftoa(value_f32, str_val, 2);
         cli_printf("%s=%s%s ", adc_list[i].ain.name, str_val,
                    adc_list[i].ain.units);
