@@ -135,7 +135,6 @@ static void adc_test_read_callback(struct ush_object *self,
   adc_list[8] = (struct measurement){.ain = brd->ai.temp_a, .type = F32};
   adc_list[9] = (struct measurement){.ain = brd->ai.temp_b, .type = F32};
   adc_list[10] = (struct measurement){.ain = brd->ai.temp_c, .type = F32};
-  adc_list[10] = (struct measurement){.ain = brd->ai.temp_m, .type = F32};
   adc_list[11] = (struct measurement){.ain = enc_raw, .type = INT32};
   adc_list[12] = (struct measurement){.ain = angle, .type = Q31};
 

@@ -17,6 +17,7 @@ typedef struct {
   float offset;
   char *units;
   volatile uint32_t *data;
+  void *read_args;
   float (*read_f32)(void *self);
   uint32_t (*read_u32)(void *self);
 } hal_analog_input_t;
