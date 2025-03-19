@@ -2,6 +2,7 @@
 #include "hal.h"
 #include "hal_stm32_adc.h"
 #include "log.h"
+#include "sensors/sensor_ntc.h"
 #include "stm32g4xx.h"
 
 static adc_t adc1 = {.regs = ADC1};
@@ -9,6 +10,12 @@ static adc_t adc2 = {.regs = ADC2};
 static adc_t adc3 = {.regs = ADC3};
 static adc_t adc4 = {.regs = ADC4};
 static adc_t adc5 = {.regs = ADC5};
+
+// NTCs
+static sensor_ntc_t ntc_phase_a;
+static sensor_ntc_t ntc_phase_b;
+static sensor_ntc_t ntc_phase_c;
+static sensor_ntc_t ntc_motor;
 
 #define ADC_SAMPLE_1_5_CYCLES 0x0   // 1.5 ADC clock cycles
 #define ADC_SAMPLE_2_5_CYCLES 0x1   // 2.5 ADC clock cycles
@@ -50,6 +57,66 @@ void board_opamp_setup(void) {
                 3 << OPAMP_CSR_VMSEL_Pos | OPAMP_CSR_HIGHSPEEDEN |
                 OPAMP_CSR_OPAMPINTEN | // Internal connection
                 OPAMP_CSR_OPAMPxEN;
+}
+
+//------------------------------------------------------
+// NTC Config
+//------------------------------------------------------
+
+static inline float ntc_analog_read_f32(void *self) {
+  hal_analog_input_t *s = (hal_analog_input_t *)self;
+  sensor_ntc_t *ntc = (sensor_ntc_t *)s->read_args;
+
+  float temperature;
+  float ntc_voltage = *s->data * s->scale + s->offset;
+  temperature = sensor_ntc_read_f32(ntc, ntc_voltage);
+
+  return temperature;
+}
+
+void board_ntc_setup(void) {
+
+  board_t *brd = board_get_handle();
+
+  ntc_phase_a = (sensor_ntc_t){
+      .B = 3380.0f,
+      .rth_25C = 10e3,
+      .rs = 10e3,
+      .rcmc = 0.0f,
+      .vs = 3.3,
+      .config = NTC_CONFIG_BOT,
+  };
+  brd->ai.temp_a.read_args = &ntc_phase_a;
+
+  ntc_phase_b = (sensor_ntc_t){
+      .B = 3380.0f,
+      .rth_25C = 10e3,
+      .rs = 10e3,
+      .rcmc = 0.0f,
+      .vs = 3.3,
+      .config = NTC_CONFIG_BOT,
+  };
+  brd->ai.temp_b.read_args = &ntc_phase_b;
+
+  ntc_phase_c = (sensor_ntc_t){
+      .B = 3380.0f,
+      .rth_25C = 10e3,
+      .rs = 10e3,
+      .rcmc = 0.0f,
+      .vs = 3.3,
+      .config = NTC_CONFIG_BOT,
+  };
+  brd->ai.temp_c.read_args = &ntc_phase_c;
+
+  ntc_motor = (sensor_ntc_t){
+      .B = 3380.0f,
+      .rth_25C = 10e3,
+      .rs = 1e3,
+      .rcmc = 100.0f,
+      .vs = 3.3,
+      .config = NTC_CONFIG_BOT,
+  };
+  brd->ai.temp_m.read_args = &ntc_motor;
 }
 
 //------------------------------------------------------
@@ -273,6 +340,13 @@ void board_adc_setup(void) {
     hal_analog_input_init(&ain_ptr[i]);
   }
 
+  // Plug NTC custom conversion functions
+  board_ntc_setup();
+  brd->ai.temp_a.read_f32 = ntc_analog_read_f32;
+  brd->ai.temp_b.read_f32 = ntc_analog_read_f32;
+  brd->ai.temp_c.read_f32 = ntc_analog_read_f32;
+  brd->ai.temp_m.read_f32 = ntc_analog_read_f32;
+
   board_opamp_setup();
 
   // TODO: Configure comparators
@@ -288,8 +362,8 @@ void board_adc_setup(void) {
   adc_register_input(&adc2, &brd->ai.temp_b, 'i', ADC_SAMPLE_247_5_CYCLES);
   adc_register_input(&adc2, &brd->ai.temp_a, 'i', ADC_SAMPLE_247_5_CYCLES);
   adc_register_input(&adc2, &brd->ai.temp_c, 'i', ADC_SAMPLE_247_5_CYCLES);
-  // adc_register_input(&adc2, &brd->ai.vl_mon, 'i', ADC_SAMPLE_247_5_CYCLES);
-  adc_register_input(&adc2, &brd->ai.temp_m, 'i', ADC_SAMPLE_247_5_CYCLES);
+  adc_register_input(&adc2, &brd->ai.vl_mon, 'i', ADC_SAMPLE_247_5_CYCLES);
+  // adc_register_input(&adc2, &brd->ai.temp_m, 'i', ADC_SAMPLE_247_5_CYCLES);
 
   adc_register_input(&adc3, &brd->ai.ia_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
   adc_register_input(&adc3, &brd->ai.va_fb, 'i', ADC_SAMPLE_2_5_CYCLES);

@@ -14,10 +14,9 @@ typedef struct {
   float rcmc; // if using R common mode choke
   float vs;
   float B;
-  hal_analog_input_t *analog_input;
 
 } sensor_ntc_t;
 
-float sensor_ntc_read_f32(sensor_ntc_t *self);
+float sensor_ntc_read_f32(sensor_ntc_t *self, float ntc_volts);
 
 #endif //__SENSOR_NTC_H

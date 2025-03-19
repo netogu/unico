@@ -108,10 +108,6 @@ typedef struct board_s {
   struct board_hw_t {
     hal_pwm_3ph_t mcpwm;
     hal_encoder_t encoder;
-    sensor_ntc_t ntc_phase_a;
-    sensor_ntc_t ntc_phase_b;
-    sensor_ntc_t ntc_phase_c;
-    sensor_ntc_t ntc_motor;
   } hw;
 
   struct board_com_t {
