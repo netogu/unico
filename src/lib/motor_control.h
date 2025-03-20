@@ -1,6 +1,7 @@
 #ifndef __MOC_H__
 #define __MOC_H__
 
+#include "dsp/controller_functions.h"
 #include <stdint.h>
 
 enum moc_foc_mode {
@@ -20,6 +21,9 @@ typedef struct {
     FOC_PHASE_ACB,
   } phase_mode;
 
+  arm_pid_instance_f32 pid_id;
+  arm_pid_instance_f32 pid_iq;
+
   float vbus;
   float rotor_angle_f32;
   int32_t rotor_angle_q31;
@@ -36,6 +40,10 @@ typedef struct {
     float vd;
     float iq;
     float id;
+    float vq_lim;
+    float vd_lim;
+    float iq_lim;
+    float id_lim;
   } dq0;
 
   struct {
@@ -49,7 +57,9 @@ typedef struct {
 
 } moc_foc_t;
 
+void moc_foc_init(moc_foc_t *self);
 void moc_foc_update(moc_foc_t *self);
 void moc_foc_set_mode(moc_foc_t *self, enum moc_foc_mode mode);
+void moc_foc_pid_update(moc_foc_t *self, uint32_t reset);
 
 #endif

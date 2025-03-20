@@ -1,8 +1,45 @@
-#include "bsp.h"
 #include "dsp/controller_functions.h"
 #include "hal_stm32_cordic.h"
 #include "motor_control.h"
 #include <stdint.h>
+
+arm_pid_instance_f32 pid_id;
+arm_pid_instance_f32 pid_iq;
+
+static float moc_saturate_symetric_f32(float in, float lim) {
+  float out = in;
+  if (in > lim) {
+    out = lim;
+  } else if (in < -lim) {
+    out = -lim;
+  }
+  return out;
+}
+
+inline void moc_foc_pid_update(moc_foc_t *self, uint32_t reset) {
+
+  arm_pid_init_f32(&self->pid_id, reset);
+  arm_pid_init_f32(&self->pid_iq, reset);
+}
+
+void moc_foc_init(moc_foc_t *self) {
+
+  self->pid_id.Kp = 1.0;
+  self->pid_id.Ki = 1.0;
+  self->pid_id.Kd = 0.0;
+
+  self->pid_iq.Kp = 1.0;
+  self->pid_iq.Ki = 1.0;
+  self->pid_iq.Kd = 0.0;
+
+  self->dq0.vd_lim = 5.0f;
+  self->dq0.vq_lim = 5.0f;
+
+  self->dq0.id_lim = 15.0;
+  self->dq0.iq_lim = 15.0;
+
+  moc_foc_pid_update(self, 1);
+}
 
 void moc_foc_update(moc_foc_t *self) {
 
@@ -34,6 +71,15 @@ void moc_foc_update(moc_foc_t *self) {
     arm_park_f32(ialpha, ibeta, &self->dq0.id, &self->dq0.iq, sin_f32, cos_f32);
 
     // (PID iD, iQ) --> Vd, Vq
+    float id_error = self->sp.id_sp - self->dq0.id;
+    float iq_error = self->sp.iq_sp - self->dq0.iq;
+
+    self->dq0.vd = arm_pid_f32(&self->pid_id, id_error);
+    self->dq0.vq = arm_pid_f32(&self->pid_iq, iq_error);
+
+    // Saturate vd, vq
+    self->dq0.vd = moc_saturate_symetric_f32(self->dq0.vd, self->dq0.vd_lim);
+    self->dq0.vq = moc_saturate_symetric_f32(self->dq0.vq, self->dq0.vq_lim);
 
     vd_norm = self->dq0.vd / self->vbus;
     vq_norm = self->dq0.vq / self->vbus;

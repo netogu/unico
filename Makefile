@@ -23,11 +23,12 @@ GDB = arm-none-eabi-gdb
 # Paths
 #------------------------------------------------+
 BUILD_DIR = build
+ARM_PATH = /usr/local/arm-gnu-toolchain
 TINYUSB = src/external/tinyusb/src
 MICROSHELL = src/external/microshell/src
 TINYPRINTF = src/external/tiny_printf
 FREERTOS = src/external/freertos
-ARM_PATH = /usr/local/arm-gnu-toolchain
+ARM_MATH = src/external/CMSIS-DSP
 
 #------------------------------------------------+
 # Sources
@@ -56,6 +57,8 @@ C_SOURCES += $(wildcard $(TINYUSB)/portable/st/typec/typec_stm32.c)
 C_SOURCES += $(wildcard $(MICROSHELL)/src/*.c)
 C_SOURCES += $(wildcard $(MICROSHELL)/src/commands/*.c)
 C_SOURCES += $(wildcard $(FREERTOS)/*.c)
+# C_SOURCES += $(wildcard $(ARM_MATH)/Source/BasicMathFunctions/*.c)
+C_SOURCES += $(wildcard $(ARM_MATH)/Source/ControllerFunctions/arm_pid_*.c)
 C_SOURCES += $(FREERTOS)/portable/GCC/ARM_CM4F/port.c
 C_SOURCES += $(FREERTOS)/portable/MemMang/heap_3.c
 

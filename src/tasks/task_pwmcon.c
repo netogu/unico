@@ -39,6 +39,8 @@ static inline int pwmcon_foc_process_message(moc_foc_t *foc,
 
   foc->sp.vd_sp = (float)msg->vd_mv / 1000.0f; // Convert to volts from mV
   foc->sp.vq_sp = (float)msg->vq_mv / 1000.0f; // Convert to volts from mV
+  foc->sp.id_sp = (float)msg->id_ma / 1000.0f; // Convert to amps from mA
+  foc->sp.iq_sp = (float)msg->iq_ma / 1000.0f; // Convert to amps from mA
   foc->mode = msg->mode;
   // foc->_int.count_rate = msg->count_rate;
 
@@ -96,6 +98,9 @@ static void task_pwm_control(void *parameters) {
   brd->ai.ia_fb.offset = -ia;
   brd->ai.ib_fb.offset = -ib;
   brd->ai.ic_fb.offset = -ic;
+
+  moc_foc_init(&foc);
+  moc_foc_update(&foc);
 
   while (1) {
 

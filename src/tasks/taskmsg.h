@@ -9,6 +9,8 @@
 typedef struct pwmcon_msg_t {
   int32_t vq_mv;
   int32_t vd_mv;
+  int32_t iq_ma;
+  int32_t id_ma;
   enum moc_foc_mode mode;
 } pwmcon_msg_t;
 

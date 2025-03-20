@@ -5,12 +5,13 @@ void uclib_ftoa(float f32, char *s, int decimal_places) {
   if (s == NULL || decimal_places < 0)
     return;
 
+  char sign = ' ';
   // Handle negative numbers
   if (f32 < 0) {
-    *s++ = '-';
+    sign = '-';
     f32 = -f32; // Convert to positive
   } else {
-    *s++ = ' ';
+    sign = ' ';
   }
 
   // Round the number correctly
@@ -31,5 +32,5 @@ void uclib_ftoa(float f32, char *s, int decimal_places) {
   int frac_int = (int)(frac_part * rounding_factor);
 
   // Print formatted string
-  sprintf(s, "%d.%0*d", int_part, decimal_places, frac_int);
+  sprintf(s, "%c%*d.%0*d", sign, 2, int_part, decimal_places, frac_int);
 }
