@@ -363,9 +363,11 @@ static void dpt_exec_callback(struct ush_object *self,
 static void _print_pwmcon_msg(struct ush_object *self, pwmcon_msg_t *msg) {
   ush_printf(self, "vq = %d mV\n\r", msg->vq_mv);
   ush_printf(self, "vd = %d mV\n\r", msg->vd_mv);
+  ush_printf(self, "iq = %d mA\n\r", msg->iq_ma);
+  ush_printf(self, "id = %d mA\n\r", msg->id_ma);
   ush_printf(self, "mode = %d\n\r", msg->mode);
 }
-// PWMA Set Duty Callback
+// FOC Control Interface
 static void foc_cmd_cb(struct ush_object *self,
                        struct ush_file_descriptor const *file, int argc,
                        char *argv[]) {
@@ -400,6 +402,16 @@ static void foc_cmd_cb(struct ush_object *self,
     } else if (strcmp(argv[current_arg], "vd") == 0) {
       int32_t vd = atoi(argv[current_arg + 1]);
       msg.vd_mv = vd;
+      msg_updated = true;
+      current_arg += 2;
+    } else if (strcmp(argv[current_arg], "iq") == 0) {
+      int32_t iq = atoi(argv[current_arg + 1]);
+      msg.iq_ma = iq;
+      msg_updated = true;
+      current_arg += 2;
+    } else if (strcmp(argv[current_arg], "id") == 0) {
+      int32_t id = atoi(argv[current_arg + 1]);
+      msg.id_ma = id;
       msg_updated = true;
       current_arg += 2;
     } else if (strcmp(argv[current_arg], "mode") == 0) {
