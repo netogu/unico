@@ -185,7 +185,7 @@ static void adc_test_read_callback(struct ush_object *self,
       }
     }
 
-    tud_cdc_write_flush();
+    // tud_cdc_write_flush();
     cli_printf("\n\r");
 
     samples++;

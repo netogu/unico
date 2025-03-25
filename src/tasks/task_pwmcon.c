@@ -12,7 +12,6 @@
 
 static moc_foc_t foc = {0};
 static pwmcon_msg_t msg = {0};
-static void task_pwmcon_timer_callback(void);
 
 static TaskHandle_t task_pwm_control_handle;
 static StaticTask_t task_pwm_control_tcb;
@@ -47,7 +46,7 @@ static inline int pwmcon_foc_process_message(moc_foc_t *foc,
   return 0;
 }
 
-static void task_pwmcon_timer_callback() {
+void task_pwmcon_update_callback() {
   // Timer Callback
   board_t *brd = board_get_handle();
   // Read Feedback
@@ -80,13 +79,13 @@ static void task_pwm_control(void *parameters) {
   cordic_init(&cordic);
 
   // Create and start Task Timer
-  hal_timer_t *task_pwmcon_timer =
-      timer_create(1000, task_pwmcon_timer_callback);
-  if (task_pwmcon_timer) {
-    timer_start(task_pwmcon_timer);
-  } else {
-    cli_printf("ERROR:\tTimer Failed to Start\r\n");
-  }
+  // hal_timer_t *task_pwmcon_timer =
+  //     timer_create(1000, task_pwmcon_update_callback);
+  // if (task_pwmcon_timer) {
+  //   timer_start(task_pwmcon_timer);
+  // } else {
+  //   cli_printf("ERROR:\tTimer Failed to Start\r\n");
+  // }
 
   foc.vbus = 1.0;
 

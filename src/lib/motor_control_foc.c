@@ -6,14 +6,16 @@
 arm_pid_instance_f32 pid_id;
 arm_pid_instance_f32 pid_iq;
 
-static float moc_saturate_symetric_f32(float in, float lim) {
-  float out = in;
-  if (in > lim) {
-    out = lim;
-  } else if (in < -lim) {
-    out = -lim;
-  }
-  return out;
+__attribute__((always_inline)) static inline float
+moc_saturate_symetric_f32(float in, float lim) {
+  // float out = in;
+  // if (in > lim) {
+  //   out = lim;
+  // } else if (in < -lim) {
+  //   out = -lim;
+  // }
+  // return out;
+  return fmaxf(-lim, fminf(in, lim));
 }
 
 inline void moc_foc_pid_update(moc_foc_t *self, uint32_t reset) {
@@ -24,16 +26,16 @@ inline void moc_foc_pid_update(moc_foc_t *self, uint32_t reset) {
 
 void moc_foc_init(moc_foc_t *self) {
 
-  self->pid_id.Kp = 1.0;
-  self->pid_id.Ki = 1.0;
+  self->pid_id.Kp = 6.0;
+  self->pid_id.Ki = 0.001;
   self->pid_id.Kd = 0.0;
 
-  self->pid_iq.Kp = 1.0;
-  self->pid_iq.Ki = 1.0;
+  self->pid_iq.Kp = 6.0;
+  self->pid_iq.Ki = 0.001;
   self->pid_iq.Kd = 0.0;
 
-  self->dq0.vd_lim = 5.0f;
-  self->dq0.vq_lim = 5.0f;
+  self->dq0.vd_lim = 10.0f;
+  self->dq0.vq_lim = 10.0f;
 
   self->dq0.id_lim = 15.0;
   self->dq0.iq_lim = 15.0;
@@ -41,8 +43,7 @@ void moc_foc_init(moc_foc_t *self) {
   moc_foc_pid_update(self, 1);
 }
 
-void moc_foc_update(moc_foc_t *self) {
-
+__attribute__((always_inline)) inline void moc_foc_update(moc_foc_t *self) {
   if (self == NULL) {
     return;
   }
@@ -67,7 +68,7 @@ void moc_foc_update(moc_foc_t *self) {
   float sin_f32 = q31_to_f32(sin_q31);
 
   if (self->mode == FOC_MODE_CURRENT_CONTROL) {
-    arm_clarke_f32(self->abc.iphase[0], self->abc.iphase[1], &ialpha, &ibeta);
+    arm_clarke_f32(self->abc.iphase[0], self->abc.iphase[2], &ialpha, &ibeta);
     arm_park_f32(ialpha, ibeta, &self->dq0.id, &self->dq0.iq, sin_f32, cos_f32);
 
     // (PID iD, iQ) --> Vd, Vq

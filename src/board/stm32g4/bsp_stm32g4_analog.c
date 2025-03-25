@@ -4,6 +4,7 @@
 #include "log.h"
 #include "sensors/sensor_ntc.h"
 #include "stm32g4xx.h"
+#include "tasklist.h" //pwmcon_update_callback
 
 static adc_t adc1 = {.regs = ADC1};
 static adc_t adc2 = {.regs = ADC2};
@@ -365,14 +366,14 @@ void board_adc_setup(void) {
   adc_register_input(&adc2, &brd->ai.vl_mon, 'i', ADC_SAMPLE_247_5_CYCLES);
   // adc_register_input(&adc2, &brd->ai.temp_m, 'i', ADC_SAMPLE_247_5_CYCLES);
 
-  adc_register_input(&adc3, &brd->ai.ia_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
-  adc_register_input(&adc3, &brd->ai.va_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
+  adc_register_input(&adc3, &brd->ai.ia_fb, 'i', ADC_SAMPLE_47_5_CYCLES);
+  // adc_register_input(&adc3, &brd->ai.va_fb, 'i', ADC_SAMPLE_47_5_CYCLES);
 
-  adc_register_input(&adc4, &brd->ai.ic_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
-  adc_register_input(&adc4, &brd->ai.vb_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
+  adc_register_input(&adc4, &brd->ai.ic_fb, 'i', ADC_SAMPLE_47_5_CYCLES);
+  // adc_register_input(&adc4, &brd->ai.vb_fb, 'i', ADC_SAMPLE_47_5_CYCLES);
 
-  adc_register_input(&adc5, &brd->ai.ib_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
-  adc_register_input(&adc5, &brd->ai.vc_fb, 'i', ADC_SAMPLE_2_5_CYCLES);
+  adc_register_input(&adc5, &brd->ai.ib_fb, 'i', ADC_SAMPLE_47_5_CYCLES);
+  // adc_register_input(&adc5, &brd->ai.vc_fb, 'i', ADC_SAMPLE_47_5_CYCLES);
 
   printf("%s", timestamp());
   if (adc_init(&adc1) == 0) {
@@ -426,9 +427,9 @@ void board_adc_setup(void) {
 
 void ADC1_IRQHandler(void) {
   if (ADC1->ISR & ADC_ISR_JEOS) {
-    board_t *brd = board_get_handle();
-    hal_gpio_set(&brd->dio.test_pin0);
-    hal_gpio_clear(&brd->dio.test_pin0);
+    // board_t *brd = board_get_handle();
+    // hal_gpio_set(&brd->dio.test_pin0);
+    // hal_gpio_clear(&brd->dio.test_pin0);
     ADC1->ISR |= ADC_ISR_JEOS;
   }
 }
@@ -437,6 +438,7 @@ void ADC3_IRQHandler(void) {
   if (ADC3->ISR & ADC_ISR_JEOS) {
     board_t *brd = board_get_handle();
     hal_gpio_set(&brd->dio.test_pin0);
+    task_pwmcon_update_callback();
     hal_gpio_clear(&brd->dio.test_pin0);
     ADC3->ISR |= ADC_ISR_JEOS;
   }

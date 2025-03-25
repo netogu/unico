@@ -73,8 +73,10 @@ int cli_printf(const char *format, ...) {
   va_end(args);
 
   if (xSemaphoreTake(usb_mutex, 10) == pdTRUE) {
+    // taskENTER_CRITICAL();
     status = tud_cdc_write((uint8_t *)buffer, strlen(buffer));
     xSemaphoreGive(usb_mutex);
+    // taskEXIT_CRITICAL();
   }
   return status;
 }
